@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="EASE Jupyter Kernel Launcher" default="kernelLauncher">
+	<property name="projectHome" location="." />
+	<property name="outputDir" location="${projectHome}/build" />
+	<property name="kernelDir" location="${outputDir}/ease" />
+	<property name="jarFile" value="org.eclipse.ease.jupyter.kernel.launcher.jar" />
+	<property name="kernelFile" value="kernel.json" />
+	<property name="main-class" value="org.eclipse.ease.jupyter.kernel.launcher.Launcher" />
+
+	<!-- Populate skeleton file with actual values -->
+	<target name="kernelSkeleton" description="Create kernel.json kernel specification for the project's directory.">
+		<copy file="${projectHome}/static/${kernelFile}" tofile="${kernelDir}/${kernelFile}" />
+		<replace file="${kernelDir}/${kernelFile}" token="@BUILDDIR@" value="${outputDir}" />
+	</target>
+
+	<!-- Create .jar file -->
+	<target name="jar" description="Create executable .jar file for kernel launcher.">
+		<jar destfile="${outputDir}/${jarFile}" basedir="${projectHome}/bin">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- Main target building the jar file and the kernel skeleton -->
+	<target name="kernelLauncher" depends="kernelSkeleton,jar" description="Create kernel launcher." />
+</project>
