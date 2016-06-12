@@ -34,3 +34,8 @@ If **ease** is among the available kernels, you successfully installed the launc
 Running Jupyter Kernels:
 ------------------------
 
+To run the Jupyter kernel for now please start the *Dispatcher* class from *org.eclipse.ease.jupyter.kernel*. This will set up the Dispatcher server that receives the connection file and actually starts the kernel.
+
+Note that this is only necessary during development phase as development is faster with a plain Java application.
+
+This **README** will be updated accordingly whenever the usage changes.

@@ -76,11 +76,10 @@ public class Launcher {
 				throw new RuntimeException("Dead code.");
 			}
 
-			// Send data (First file length, then actual data)
+			// Send data
 			try {
 				DataOutputStream outputStream = new DataOutputStream(
 						socket.getOutputStream());
-				outputStream.writeInt(connectionBytes.length);
 				outputStream.write(connectionBytes);
 			} catch (IOException e) {
 				System.err.println("Could not send data to Eclipse.");
