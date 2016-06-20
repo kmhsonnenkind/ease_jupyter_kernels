@@ -21,13 +21,14 @@ public class Launcher {
 	 * 
 	 * args parameter must consist of three values:
 	 * <ul>
-	 * 	<li>Launch configuration file (created by Jupyter).</li>
-	 *  <li>Host Eclipse is listening on.</li>
-	 *  <li>Port Eclipse is listening on.</li>
+	 * <li>Launch configuration file (created by Jupyter).</li>
+	 * <li>Host Eclipse is listening on.</li>
+	 * <li>Port Eclipse is listening on.</li>
 	 * </ul>
 	 * 
-	 * @param args	Command line parameters.
-	 * @returns	0 if successfull, other other values mean error.
+	 * @param args
+	 *            Command line parameters.
+	 * @returns 0 if successfull, other other values mean error.
 	 */
 	public static void main(String[] args) {
 		// Check command line arguments
@@ -86,14 +87,23 @@ public class Launcher {
 				System.exit(-4);
 			}
 
+			DataInputStream inputStream;
 			try {
-				// Read back exit code for launcher
-				DataInputStream inputStream = new DataInputStream(
-						socket.getInputStream());
-				System.exit(inputStream.readInt());
+			inputStream = new DataInputStream(
+					socket.getInputStream());
 			} catch (IOException e) {
-				System.err.println("Eclipse took too long to respond.");
+				System.err.println("Could not establish connection to Eclipse.");
 				System.exit(-4);
+				throw new RuntimeException("Dead code.");
+			}
+
+			while (true) {
+				try {
+					inputStream.read();
+					break;
+				} catch (IOException e) {
+					// Ignore
+				}
 			}
 		} finally {
 			if (socket != null) {

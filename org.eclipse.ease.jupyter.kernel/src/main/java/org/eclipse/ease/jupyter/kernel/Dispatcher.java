@@ -171,26 +171,31 @@ public class Dispatcher implements Runnable {
 		String signatureScheme = json.getString("signature_scheme");
 		String key = json.getString("key");
 
+		Config config = new Config().withControlPort(controlPort)
+				.withHbPort(hbPort).withIopubPort(ioPubPort).withIp(ip)
+				.withKey(key).withShellPort(shellPort)
+				.withSignatureScheme(signatureScheme).withStdinPort(stdinPort)
+				.withTransport(transport);
+
 		// Actually build the kernel
-		Kernel kernel = new Kernel(ip, stdinPort, controlPort, shellPort,
-				hbPort, ioPubPort, transport, signatureScheme, key);
+		Kernel kernel = new Kernel(config);
 
 		// Get the attachment to be able to write back data
 		ByteBuffer sendBuffer = (ByteBuffer) selectionKey.attachment();
-		int errorCode = 0;
 
 		// Start the kernel
 		try {
 			kernel.start();
 		} catch (IOError e) {
-			errorCode = -1;
-		}
+			e.printStackTrace();
 
-		// Asynchronously send back error code
-		synchronized (sendBuffer) {
-			sendBuffer.putInt(errorCode);
+			// Asynchronously send back error code
+			synchronized (sendBuffer) {
+				sendBuffer.putInt(-1);
+			}
+			selectionKey.interestOps(SelectionKey.OP_READ
+					| SelectionKey.OP_WRITE);
 		}
-		selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 	}
 
 	/**
@@ -280,6 +285,8 @@ public class Dispatcher implements Runnable {
 
 	/**
 	 * Main function runs the dispatcher server in new thread.
+	 * 
+	 * TODO: move to test class
 	 * 
 	 * @param args
 	 */
