@@ -1,9 +1,19 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.handlers;
 
 import java.io.IOException;
 
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
-import org.eclipse.ease.jupyter.kernel.messages.Content;
 import org.eclipse.ease.jupyter.kernel.messages.ExecuteRequest;
 import org.eclipse.ease.jupyter.kernel.messages.IsCompleteReply;
 import org.eclipse.ease.jupyter.kernel.messages.Message;
@@ -86,7 +96,7 @@ public class IsCompleteMessageHandler implements IMessageHandler {
 		Message reply = message.createReply();
 		reply.getHeader().withMsgType("is_complete_reply");
 
-		Content content = new IsCompleteReply()
+		IsCompleteReply content = new IsCompleteReply()
 				.withIndent("")
 				.withStatus(
 						org.eclipse.ease.jupyter.kernel.messages.IsCompleteReply.Status.COMPLETE);

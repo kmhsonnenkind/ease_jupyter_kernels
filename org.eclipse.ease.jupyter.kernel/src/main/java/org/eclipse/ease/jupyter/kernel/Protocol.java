@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *     Tobias Verbeke - original protocol implementation in Japyter project
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel;
 
 import com.fasterxml.jackson.core.JsonEncoding;
@@ -26,6 +38,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 
  * Handles message parsing either creating {@link Message} objects from byte
  * arrays or creates byte arrays from {@link Message} objects.
+ * 
+ * Largely based on Protocol from Japyter project.
  *
  */
 public class Protocol {
@@ -48,8 +62,7 @@ public class Protocol {
 	/**
 	 * Encoding used by messages (default UTF-8)
 	 */
-	public static final Charset ENCODING = Charset.forName(JsonEncoding.UTF8
-			.getJavaName());
+	public static final Charset ENCODING = Charset.forName(JsonEncoding.UTF8.getJavaName());
 
 	/**
 	 * {@link #DELIMITER} in byte form for easier use.
@@ -138,8 +151,7 @@ public class Protocol {
 			}
 		}
 
-		throw new IllegalArgumentException("Unsupported signature scheme: "
-				+ signatureScheme);
+		throw new IllegalArgumentException("Unsupported signature scheme: " + signatureScheme);
 	}
 
 	/**
@@ -165,14 +177,16 @@ public class Protocol {
 		// Patch the header for the given message
 		message.getHeader().setVersion(VERSION);
 
+		// TODO: Remove me
+		System.out.println("Header: " + new String(JSON_OBJECT_MAPPER.writeValueAsBytes(message.getHeader())));
+		System.out.println("Content: " + new String(JSON_OBJECT_MAPPER.writeValueAsBytes(message.getContent())));
+		System.out.println();
+
 		// Split the data into json frames according to the wire protocol
-		final List<byte[]> jsonFrames = Arrays
-				.asList(JSON_OBJECT_MAPPER.writeValueAsBytes(message
-						.getHeader()), JSON_OBJECT_MAPPER
-						.writeValueAsBytes(message.getParentHeader()),
-						JSON_OBJECT_MAPPER.writeValueAsBytes(message
-								.getMetadata()), JSON_OBJECT_MAPPER
-								.writeValueAsBytes(message.getContent()));
+		final List<byte[]> jsonFrames = Arrays.asList(JSON_OBJECT_MAPPER.writeValueAsBytes(message.getHeader()),
+				JSON_OBJECT_MAPPER.writeValueAsBytes(message.getParentHeader()),
+				JSON_OBJECT_MAPPER.writeValueAsBytes(message.getMetadata()),
+				JSON_OBJECT_MAPPER.writeValueAsBytes(message.getContent()));
 
 		// Create the actual ZMQ message
 		final List<byte[]> frames = new ArrayList<byte[]>();
@@ -212,8 +226,7 @@ public class Protocol {
 	private enum FrameHandler {
 		ZMQ_ID {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message) {
 				if (Arrays.equals(frame, DELIMITER_BYTES)) {
 					return true;
 				} else {
@@ -224,63 +237,61 @@ public class Protocol {
 		},
 		HMAC_SIGNATURE {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message) {
 				message.withHmacSignature(frame);
 				return true;
 			}
 		},
 		HEADER {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) throws IOException {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message)
+					throws IOException {
 				jsonFrames.add(frame);
-				message.withHeader(JSON_OBJECT_MAPPER.readValue(frame,
-						Header.class));
+				message.withHeader(JSON_OBJECT_MAPPER.readValue(frame, Header.class));
+				// TODO: Remove
+				System.out.println("Received header: " + new String(frame));
 				return true;
 			}
 		},
 		PARENT_HEADER {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) throws IOException {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message)
+					throws IOException {
 				jsonFrames.add(frame);
-				message.withParentHeader(JSON_OBJECT_MAPPER.readValue(frame,
-						Header.class));
+				message.withParentHeader(JSON_OBJECT_MAPPER.readValue(frame, Header.class));
 				return true;
 			}
 		},
 		METADATA {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) throws IOException {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message)
+					throws IOException {
 				jsonFrames.add(frame);
-				message.withMetadata(JSON_OBJECT_MAPPER.readValue(frame,
-						Map.class));
+				message.withMetadata(JSON_OBJECT_MAPPER.readValue(frame, Map.class));
 				return true;
 			}
 		},
 		CONTENT {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) throws IOException {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message)
+					throws IOException {
 				jsonFrames.add(frame);
-				message.withContent(JSON_OBJECT_MAPPER.readValue(frame,
-						Map.class));
+				message.withContent(JSON_OBJECT_MAPPER.readValue(frame, Map.class));
+				// TODO: remove
+				System.out.println("Received content: " + new String(frame));
+				System.out.println();
 				return true;
 			}
 		},
 		EXTRA_DATA {
 			@Override
-			boolean handle(final byte[] frame, final List<byte[]> jsonFrames,
-					final Message message) {
+			boolean handle(final byte[] frame, final List<byte[]> jsonFrames, final Message message) {
 				message.withExtraDatum(frame);
 				return false;
 			}
 		};
 
-		abstract boolean handle(byte[] frame, final List<byte[]> jsonFrames,
-				Message message) throws IOException;
+		abstract boolean handle(byte[] frame, final List<byte[]> jsonFrames, Message message) throws IOException;
 	};
 
 	/**
@@ -299,8 +310,7 @@ public class Protocol {
 
 		// Get iterator for all frames in message
 		final List<byte[]> jsonFrames = new ArrayList<byte[]>();
-		final Iterator<FrameHandler> i = Arrays.asList(FrameHandler.values())
-				.iterator();
+		final Iterator<FrameHandler> i = Arrays.asList(FrameHandler.values()).iterator();
 
 		// Handle frames one at a time
 		FrameHandler handler = i.next();
@@ -312,8 +322,7 @@ public class Protocol {
 
 		// Check if all frames successfully handled
 		if (handler != FrameHandler.EXTRA_DATA) {
-			throw new IOException("Not enough frames received, last frame: "
-					+ handler);
+			throw new IOException("Not enough frames received, last frame: " + handler);
 		}
 
 		// Check if signature correct.

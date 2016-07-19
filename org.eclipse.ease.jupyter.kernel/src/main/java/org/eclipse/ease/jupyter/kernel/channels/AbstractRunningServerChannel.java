@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.channels;
 
 import java.io.IOException;
@@ -10,8 +21,7 @@ import org.eclipse.ease.jupyter.kernel.Session;
  * currently running.
  *
  */
-public abstract class AbstractRunningServerChannel extends
-		AbstractServerChannel {
+public abstract class AbstractRunningServerChannel extends AbstractServerChannel {
 
 	/**
 	 * Flag to check if channel is still running.
@@ -21,8 +31,7 @@ public abstract class AbstractRunningServerChannel extends
 	/**
 	 * @see AbstractServerChannel#AbstractServerChannel(String, Session)
 	 */
-	public AbstractRunningServerChannel(final String address,
-			final Session session) {
+	public AbstractRunningServerChannel(final String address, final Session session) {
 		super(address, session);
 	}
 

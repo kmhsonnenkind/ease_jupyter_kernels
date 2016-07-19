@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel;
 
 import java.io.IOError;
@@ -11,14 +22,12 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 
-import org.json.JSONObject;
+import org.eclipse.ease.IScriptEngine;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Server receiving connections from kernel launchers, parsing the received
  * Jupyter connection file and setting up the actual kernels.
- * 
- * @author Martin Kloesch (martin.kloesch@gmail.com)
- *
  */
 public class Dispatcher implements Runnable {
 	/**
@@ -45,6 +54,11 @@ public class Dispatcher implements Runnable {
 	protected InetSocketAddress fAddress;
 
 	/**
+	 * {@link IScriptEngine} for code execution.
+	 */
+	protected IScriptEngine fEngine;
+
+	/**
 	 * Constructor only stores information about address to run the server on.
 	 * 
 	 * @param host
@@ -52,7 +66,8 @@ public class Dispatcher implements Runnable {
 	 * @param port
 	 *            Port to run the server on.
 	 */
-	public Dispatcher(String host, int port) {
+	public Dispatcher(IScriptEngine engine, String host, int port) {
+		fEngine = engine;
 		fAddress = new InetSocketAddress(host, port);
 	}
 
@@ -88,8 +103,7 @@ public class Dispatcher implements Runnable {
 	 *            be accepted.
 	 */
 	protected void accept(SelectionKey key) {
-		ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key
-				.channel();
+		ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
 
 		// Get connection to client
 		SocketChannel socketChannel = null;
@@ -153,32 +167,16 @@ public class Dispatcher implements Runnable {
 		}
 
 		// Parse data
-		String data = new String(buffer.array());
-		JSONObject json = new JSONObject(data);
-
-		// Socket addresses' information
-		String ip = json.getString("ip");
-		int stdinPort = json.getInt("stdin_port");
-		int controlPort = json.getInt("control_port");
-		int shellPort = json.getInt("shell_port");
-		int hbPort = json.getInt("hb_port");
-		int ioPubPort = json.getInt("iopub_port");
-
-		// Socket connection type information
-		String transport = json.getString("transport");
-
-		// Signature information
-		String signatureScheme = json.getString("signature_scheme");
-		String key = json.getString("key");
-
-		Config config = new Config().withControlPort(controlPort)
-				.withHbPort(hbPort).withIopubPort(ioPubPort).withIp(ip)
-				.withKey(key).withShellPort(shellPort)
-				.withSignatureScheme(signatureScheme).withStdinPort(stdinPort)
-				.withTransport(transport);
+		Config config = null;
+		try {
+			config = new ObjectMapper().readValue(buffer.array(), Config.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
 
 		// Actually build the kernel
-		Kernel kernel = new Kernel(config);
+		Kernel kernel = new Kernel(config, fEngine);
 
 		// Get the attachment to be able to write back data
 		ByteBuffer sendBuffer = (ByteBuffer) selectionKey.attachment();
@@ -193,8 +191,7 @@ public class Dispatcher implements Runnable {
 			synchronized (sendBuffer) {
 				sendBuffer.putInt(-1);
 			}
-			selectionKey.interestOps(SelectionKey.OP_READ
-					| SelectionKey.OP_WRITE);
+			selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 		}
 	}
 
@@ -254,8 +251,7 @@ public class Dispatcher implements Runnable {
 				fSelector.select();
 
 				// Information about all events
-				Iterator<SelectionKey> selectedKeys = fSelector.selectedKeys()
-						.iterator();
+				Iterator<SelectionKey> selectedKeys = fSelector.selectedKeys().iterator();
 				while (selectedKeys.hasNext()) {
 					SelectionKey key = selectedKeys.next();
 
@@ -282,16 +278,4 @@ public class Dispatcher implements Runnable {
 			}
 		}
 	}
-
-	/**
-	 * Main function runs the dispatcher server in new thread.
-	 * 
-	 * TODO: move to test class
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		new Thread(new Dispatcher("localhost", 54321)).start();
-	}
-
 }

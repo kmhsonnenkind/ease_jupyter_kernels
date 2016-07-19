@@ -1,8 +1,20 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.handlers;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Kernel;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractServerChannel;
 import org.eclipse.ease.jupyter.kernel.channels.IOPubChannel;
@@ -16,9 +28,6 @@ import org.eclipse.ease.jupyter.kernel.channels.StdinChannel;
  * 
  * Users do not need to know about the available {@link IMessageHandler}s but
  * only need to call this method to get the corresponding factory method.
- * 
- * @author Martin Kloesch (martin.kloesch@gmail.com)
- *
  */
 public class AbstractMessageHandlerFactory {
 	/**
@@ -40,15 +49,14 @@ public class AbstractMessageHandlerFactory {
 	 * @param stdin
 	 *            {@link StdinChannel} for querying data from user.
 	 */
-	public AbstractMessageHandlerFactory(Kernel kernel,
-			AbstractServerChannel channel, IOPubChannel ioPub,
-			StdinChannel stdin) {
-		fFactoryMethods.put("kernel_info_request",
+	public AbstractMessageHandlerFactory(Kernel kernel, AbstractServerChannel channel, IOPubChannel ioPub,
+			IScriptEngine engine) {
+		// Add all message handler factories
+		fFactoryMethods.put(KernelInfoMessageHandler.REQUEST_NAME,
 				new KernelInfoMessageHandler.Factory(channel, kernel));
-		fFactoryMethods.put("execute_request",
-				new ExecuteMessageHandler.Factory(channel, ioPub, stdin));
-		fFactoryMethods.put("is_complete_request",
-				new IsCompleteMessageHandler.Factory(channel));
+		fFactoryMethods.put(ExecuteMessageHandler.REQUEST_NAME, new ExecuteMessageHandler.Factory(channel, ioPub, engine));
+		fFactoryMethods.put("is_complete_request", new IsCompleteMessageHandler.Factory(channel));
+		fFactoryMethods.put("history_request", new HistoryMessageHandler.Factory(channel));
 	}
 
 	/**

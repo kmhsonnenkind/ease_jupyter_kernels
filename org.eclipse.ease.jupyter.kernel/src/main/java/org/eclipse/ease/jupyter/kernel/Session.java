@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *     Tobias Verbeke - original session implementation in Japyter project
+ *******************************************************************************/
 package org.eclipse.ease.jupyter.kernel;
 
 import java.io.Closeable;
@@ -19,6 +30,7 @@ import org.zeromq.ZMQ.Socket;
  * This includes the ZMQ context, a list of running channels and the ZMQ session
  * id.
  * 
+ * Largely based on Japyter project.
  */
 public class Session implements Closeable {
 	/**
@@ -58,8 +70,7 @@ public class Session implements Closeable {
 	 * @param zmqIoThreads
 	 *            Number of IO threads available to the ZMQ sockets.
 	 */
-	public Session(final Protocol protocol, final int receiveTimeoutMillis,
-			final int zmqIoThreads) {
+	public Session(final Protocol protocol, final int receiveTimeoutMillis, final int zmqIoThreads) {
 		fID = UUID.randomUUID().toString();
 
 		this.fProtocol = protocol;
@@ -96,8 +107,7 @@ public class Session implements Closeable {
 	 * @return Actual ZMQ {@link Socket} to be used by {@link AbstractChannel}.
 	 */
 	public Socket bind(final AbstractChannel channel) {
-		final Socket zmqSocket = fZmqContext.createSocket(channel
-				.getZmqSocketType());
+		final Socket zmqSocket = fZmqContext.createSocket(channel.getZmqSocketType());
 		zmqSocket.setLinger(1000L);
 		zmqSocket.setReceiveTimeOut(fReceiveTimeoutMillis);
 		zmqSocket.bind(channel.getAddress());
@@ -147,8 +157,7 @@ public class Session implements Closeable {
 	 * @throws IOException
 	 *             If data could not be send.
 	 */
-	public void send(final Message message, final Socket zmqSocket)
-			throws IOException {
+	public void send(final Message message, final Socket zmqSocket) throws IOException {
 		// Set session ID for message
 		message.getHeader().setSession(fID);
 
@@ -165,13 +174,11 @@ public class Session implements Closeable {
 			// Last frame needs to be send differently
 			if (lastFrame) {
 				if (!zmqSocket.send(frame)) {
-					throw new IOException("Failed to send frame " + i
-							+ " of message " + message);
+					throw new IOException("Failed to send frame " + i + " of message " + message);
 				}
 			} else {
 				if (!zmqSocket.sendMore(frame)) {
-					throw new IOException("Failed to send frame " + i
-							+ " of message " + message);
+					throw new IOException("Failed to send frame " + i + " of message " + message);
 				}
 			}
 		}
@@ -234,17 +241,14 @@ public class Session implements Closeable {
 	 * @throws IOException
 	 *             If communication error occured or no data received.
 	 */
-	private Message receive(final Socket zmqSocket, final boolean failOnNull)
-			throws IOException {
+	private Message receive(final Socket zmqSocket, final boolean failOnNull) throws IOException {
 		// Try to read first frame from socket
 		byte[] frame = zmqSocket.recv();
 
 		// Check if data received
 		if (frame == null) {
 			if (failOnNull) {
-				throw new IOException(
-						"Received null first frame after waiting "
-								+ fReceiveTimeoutMillis + "ms");
+				throw new IOException("Received null first frame after waiting " + fReceiveTimeoutMillis + "ms");
 			} else {
 				return null;
 			}
@@ -254,8 +258,7 @@ public class Session implements Closeable {
 		final List<byte[]> frames = new ArrayList<byte[]>();
 		do {
 			frames.add(frame);
-		} while (zmqSocket.hasReceiveMore()
-				&& ((frame = zmqSocket.recv()) != null));
+		} while (zmqSocket.hasReceiveMore() && ((frame = zmqSocket.recv()) != null));
 
 		// Parse frames to actual Message object.
 		return fProtocol.fromFrames(frames);

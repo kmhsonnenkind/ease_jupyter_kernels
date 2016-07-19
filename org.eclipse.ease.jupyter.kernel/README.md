@@ -21,9 +21,8 @@ To use the EASE kernels they must be installed. Check the *org.eclipse.ease.jupy
 Running Jupyter Kernels:
 ------------------------
 
-To run the Jupyter kernel for now please start the *Dispatcher* class from *org.eclipse.ease.jupyter.kernel*. This will set up the Dispatcher server that receives the connection file and actually starts the kernel.
-
-Note that this is only necessary during development phase as development is faster with a plain Java application.
+To simplify the start of a Jupyter kernel a EASE module */Jupyter/Jupyter Kernel* has been created.
+Call the function **startKernel(***IScriptEngine***)** with an EASE script engine of your choice. The simplest way to acquire a script engine is to use **getScriptEngine()** from the automatically loaded */System/Environment* module.
 
 After this you can use the EASE kernel like you would any other Jupyter kernel.
 

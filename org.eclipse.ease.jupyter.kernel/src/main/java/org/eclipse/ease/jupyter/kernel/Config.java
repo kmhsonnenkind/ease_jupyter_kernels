@@ -18,8 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "ip", "transport", "key", "signature_scheme",
-		"control_port", "hb_port", "shell_port", "iopub_port", "stdin_port" })
+@JsonPropertyOrder({ "ip", "transport", "key", "signature_scheme", "control_port", "hb_port", "shell_port",
+		"iopub_port", "stdin_port" })
 public class Config {
 
 	@JsonProperty("ip")
@@ -289,9 +289,8 @@ public class Config {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().append(ip).append(transport).append(key)
-				.append(signatureScheme).append(controlPort).append(hbPort)
-				.append(shellPort).append(iopubPort).append(stdinPort)
+		return new HashCodeBuilder().append(ip).append(transport).append(key).append(signatureScheme)
+				.append(controlPort).append(hbPort).append(shellPort).append(iopubPort).append(stdinPort)
 				.append(additionalProperties).toHashCode();
 	}
 
@@ -304,15 +303,10 @@ public class Config {
 			return false;
 		}
 		Config rhs = ((Config) other);
-		return new EqualsBuilder().append(ip, rhs.ip)
-				.append(transport, rhs.transport).append(key, rhs.key)
-				.append(signatureScheme, rhs.signatureScheme)
-				.append(controlPort, rhs.controlPort)
-				.append(hbPort, rhs.hbPort).append(shellPort, rhs.shellPort)
-				.append(iopubPort, rhs.iopubPort)
-				.append(stdinPort, rhs.stdinPort)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().append(ip, rhs.ip).append(transport, rhs.transport).append(key, rhs.key)
+				.append(signatureScheme, rhs.signatureScheme).append(controlPort, rhs.controlPort)
+				.append(hbPort, rhs.hbPort).append(shellPort, rhs.shellPort).append(iopubPort, rhs.iopubPort)
+				.append(stdinPort, rhs.stdinPort).append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 }

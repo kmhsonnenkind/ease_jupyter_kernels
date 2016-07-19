@@ -16,19 +16,19 @@ import java.io.IOException;
 import org.eclipse.ease.jupyter.kernel.Kernel;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
 import org.eclipse.ease.jupyter.kernel.messages.KernelInfoReply;
-import org.eclipse.ease.jupyter.kernel.messages.LanguageInfo;
 import org.eclipse.ease.jupyter.kernel.messages.Message;
+import org.eclipse.ease.jupyter.kernel.messages.ShutdownReply;
 
 /**
- * Custom message handler for handling kernel info messages.
+ * Custom message handler for handling kernel shutdown messages.
+ * 
+ * @author Martin Kloesch (martin.kloesch@gmail.com)
+ *
  */
-public class KernelInfoMessageHandler implements IMessageHandler {
-	public static final String REQUEST_NAME = "kernel_info_request";
-	private static final String REPLY_NAME = "kernel_info_reply";
-
+public class ShutdownMessageHandler implements IMessageHandler {
 	/**
 	 * {@link IMessageHandlerFactory} for creating
-	 * {@link KernelInfoMessageHandler} objects.
+	 * {@link ShutdownMessageHandler} objects.
 	 *
 	 */
 	public static class Factory implements IMessageHandlerFactory {
@@ -38,7 +38,7 @@ public class KernelInfoMessageHandler implements IMessageHandler {
 		private final AbstractChannel fChannel;
 
 		/**
-		 * {@link Kernel} object to query information from.
+		 * {@link Kernel} object to be able to later shut it down.
 		 */
 		private final Kernel fKernel;
 
@@ -57,11 +57,11 @@ public class KernelInfoMessageHandler implements IMessageHandler {
 		}
 
 		/**
-		 * Creates a new {@link KernelInfoMessageHandler} object.
+		 * Creates a new {@link ShutdownMessageHandler} object.
 		 */
 		@Override
 		public IMessageHandler create() {
-			return new KernelInfoMessageHandler(fChannel, fKernel);
+			return new ShutdownMessageHandler(fChannel, fKernel);
 		}
 
 	}
@@ -84,7 +84,7 @@ public class KernelInfoMessageHandler implements IMessageHandler {
 	 * @param kernel
 	 *            {@link Kernel} object to query information from.
 	 */
-	public KernelInfoMessageHandler(AbstractChannel channel, Kernel kernel) {
+	public ShutdownMessageHandler(AbstractChannel channel, Kernel kernel) {
 		fReplyChannel = channel;
 		fKernel = kernel;
 	}
@@ -95,18 +95,15 @@ public class KernelInfoMessageHandler implements IMessageHandler {
 	 */
 	@Override
 	public void handle(Message message) {
+		// TODO: handle restarts
 		Message reply = message.createReply();
-		reply.getHeader().withMsgType(REPLY_NAME);
-
-		// TODO: Query kernel rather than hardcoding data
-		KernelInfoReply content = new KernelInfoReply().withProtocolVersion("5.0").withImplementation("ease")
-				.withImplementationVersion("0.0.1").withBanner("EASE Test Kernel")
-				.withLanguageInfo(new LanguageInfo().withMimetype("text/javascript").withFileExtension(".js")
-						.withName("javascript").withVersion("0.0.0"));
-
-		reply.withContent(content);
+		ShutdownReply content = new ShutdownReply().withRestart(false);
+		reply = reply.withContent(content);
+		
 		try {
 			fReplyChannel.send(reply);
+			fKernel.stop();
+
 		} catch (IOException e) {
 			// ignore
 		}

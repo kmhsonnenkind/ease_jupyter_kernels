@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.channels;
 
 import java.io.IOException;
@@ -11,9 +22,6 @@ import org.eclipse.ease.jupyter.kernel.messages.Message;
 
 /**
  * Custom jupyter kernel channel publishing data to all connected clients.
- * 
- * @author Martin Kloesch (martin.kloesch@gmail.com)
- *
  */
 public class IOPubChannel extends AbstractRunningServerChannel {
 	/**
@@ -27,8 +35,7 @@ public class IOPubChannel extends AbstractRunningServerChannel {
 	/**
 	 * Blocking queue for messages to be send to all clients.
 	 */
-	private final BlockingQueue<Message> fOutputQueue = new ArrayBlockingQueue<Message>(
-			16);
+	private final BlockingQueue<Message> fOutputQueue = new ArrayBlockingQueue<Message>(16);
 
 	/**
 	 * Adds a new {@link Message} to the output queue.
@@ -49,9 +56,6 @@ public class IOPubChannel extends AbstractRunningServerChannel {
 	/**
 	 * Custom runnable trying to take {@link Message} from internal queue and
 	 * sending it to all connected clients.
-	 * 
-	 * @author Martin Kloesch (martin.kloesch@gmail.com)
-	 *
 	 */
 	private class MessageDispatcher implements Runnable {
 		@Override
@@ -77,7 +81,7 @@ public class IOPubChannel extends AbstractRunningServerChannel {
 	/**
 	 * Thread running the {@link MessageDispatcher}.
 	 */
-	protected Thread fEchoThread;
+	protected Thread fPubThread;
 
 	/*
 	 * (non-Javadoc)
@@ -89,8 +93,8 @@ public class IOPubChannel extends AbstractRunningServerChannel {
 		super.start();
 
 		// Start the echo thread (stop handled in parent)
-		fEchoThread = new Thread(new MessageDispatcher());
-		fEchoThread.start();
+		fPubThread = new Thread(new MessageDispatcher());
+		fPubThread.start();
 	}
 
 	/*
