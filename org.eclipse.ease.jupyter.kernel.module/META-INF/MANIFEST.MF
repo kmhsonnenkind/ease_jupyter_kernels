@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Jupyter Kernel Module
+Bundle-SymbolicName: org.eclipse.ease.jupyter.kernel.module;singleton:=true
+Bundle-Version: 0.0.1.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.eclipse.ease.jupyter.kernel;bundle-version="0.0.1",
+ org.eclipse.ease;bundle-version="0.4.0"
