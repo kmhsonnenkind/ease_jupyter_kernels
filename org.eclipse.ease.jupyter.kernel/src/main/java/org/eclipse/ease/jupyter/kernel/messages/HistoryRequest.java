@@ -17,13 +17,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * {@link Content} for replies to history requests.
+ * {@link Content} for history requests.
  * 
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "output", "raw", "hist_access_type", "session", "start",
-		"stop", "n", "pattern", "unique" })
+@JsonPropertyOrder({ "output", "raw", "hist_access_type", "session", "start", "stop", "n", "pattern", "unique" })
 public class HistoryRequest extends Content {
 
 	@JsonProperty("output")
@@ -123,8 +122,7 @@ public class HistoryRequest extends Content {
 		this.histAccessType = histAccessType;
 	}
 
-	public HistoryRequest withHistAccessType(
-			HistoryRequest.HistAccessType histAccessType) {
+	public HistoryRequest withHistAccessType(HistoryRequest.HistAccessType histAccessType) {
 		this.histAccessType = histAccessType;
 		return this;
 	}
@@ -295,11 +293,9 @@ public class HistoryRequest extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode())
-				.append(output).append(raw).append(histAccessType)
-				.append(session).append(start).append(stop).append(n)
-				.append(pattern).append(unique).append(additionalProperties)
-				.toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(output).append(raw).append(histAccessType)
+				.append(session).append(start).append(stop).append(n).append(pattern).append(unique)
+				.append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -311,14 +307,10 @@ public class HistoryRequest extends Content {
 			return false;
 		}
 		HistoryRequest rhs = ((HistoryRequest) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(output, rhs.output).append(raw, rhs.raw)
-				.append(histAccessType, rhs.histAccessType)
-				.append(session, rhs.session).append(start, rhs.start)
-				.append(stop, rhs.stop).append(n, rhs.n)
-				.append(pattern, rhs.pattern).append(unique, rhs.unique)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(output, rhs.output).append(raw, rhs.raw)
+				.append(histAccessType, rhs.histAccessType).append(session, rhs.session).append(start, rhs.start)
+				.append(stop, rhs.stop).append(n, rhs.n).append(pattern, rhs.pattern).append(unique, rhs.unique)
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 	public static enum HistAccessType {

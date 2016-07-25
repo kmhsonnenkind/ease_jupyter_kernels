@@ -44,7 +44,7 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	private static final String EXECUTE_INPUT = "execute_input";
 	private static final String EXECUTE_RESULT = "execute_result";
 	private static final String STATUS_TYPE = "status";
-	
+
 	/**
 	 * {@link IMessageHandlerFactory} for creating {@link ExecuteMessageHandler}
 	 * objects.
@@ -204,10 +204,19 @@ public class ExecuteMessageHandler implements IMessageHandler {
 			return;
 		}
 
-		// TODO: Think use formatting interface on result
-		// For now use plain text
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("text/plain", result.getResult().toString());
+		Object resultObject = result.getResult();
+		Map<String, Object> data;
+
+		// Check if the result already has correct format
+		if (resultObject instanceof IJupyterPublishable) {
+			// Cast to interface
+			IJupyterPublishable publishable = (IJupyterPublishable) resultObject;
+			data = publishable.toMimeTypeDict();
+		} else {
+			// Fallback to using string / plaintext
+			data = new HashMap<String, Object>();
+			data.put("text/plain", resultObject.toString());
+		}
 
 		// Create result message
 		Message resultMessage = new Message().withParentHeader(parentHeader);
@@ -246,7 +255,7 @@ public class ExecuteMessageHandler implements IMessageHandler {
 		}
 
 	}
-	
+
 	private static final Object LOCK = new Object();
 
 	/**

@@ -17,7 +17,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * {@link Content} for history requests.
+ * {@link Content} for replies to history requests.
  * 
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
