@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.ScriptResult;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
@@ -205,25 +205,26 @@ public class ExecuteMessageHandler implements IMessageHandler {
 		}
 
 		Object resultObject = result.getResult();
-		Map<String, Object> data;
-
+		IJupyterPublishable publishableResult = null;
 		// Check if the result already has correct format
 		if (resultObject instanceof IJupyterPublishable) {
-			// Cast to interface
-			IJupyterPublishable publishable = (IJupyterPublishable) resultObject;
-			data = publishable.toMimeTypeDict();
+			publishableResult = (IJupyterPublishable) resultObject;
 		} else {
-			// Fallback to using string / plaintext
-			data = new HashMap<String, Object>();
-			data.put("text/plain", resultObject.toString());
+			// Try to get an adapter to cast to IJupyterPublishable
+			IAdapterManager manager = org.eclipse.core.runtime.Platform.getAdapterManager();
+			publishableResult = manager.getAdapter(resultObject, IJupyterPublishable.class);
+			if (publishableResult == null) {
+				// Last fallback use string representation
+				publishableResult = new StringPublishable(resultObject.toString());
+			}
 		}
 
 		// Create result message
 		Message resultMessage = new Message().withParentHeader(parentHeader);
 		resultMessage.getHeader().withMsgId(Message.randomId()).withMsgType(EXECUTE_RESULT)
 				.withSession(parentHeader.getSession());
-		ExecuteResult executeResult = new ExecuteResult().withExecutionCount(fExecutionCount).withData(data)
-				.withMetadata(new HashMap<String, Object>());
+		ExecuteResult executeResult = new ExecuteResult().withExecutionCount(fExecutionCount)
+				.withData(publishableResult.toMimeTypeDict()).withMetadata(new HashMap<String, Object>());
 		resultMessage.withContent(executeResult);
 
 		// Broadcast message
