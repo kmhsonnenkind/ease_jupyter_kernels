@@ -177,11 +177,6 @@ public class Protocol {
 		// Patch the header for the given message
 		message.getHeader().setVersion(VERSION);
 
-		// TODO: Remove me
-		System.out.println("Header: " + new String(JSON_OBJECT_MAPPER.writeValueAsBytes(message.getHeader())));
-		System.out.println("Content: " + new String(JSON_OBJECT_MAPPER.writeValueAsBytes(message.getContent())));
-		System.out.println();
-
 		// Split the data into json frames according to the wire protocol
 		final List<byte[]> jsonFrames = Arrays.asList(JSON_OBJECT_MAPPER.writeValueAsBytes(message.getHeader()),
 				JSON_OBJECT_MAPPER.writeValueAsBytes(message.getParentHeader()),
@@ -248,8 +243,6 @@ public class Protocol {
 					throws IOException {
 				jsonFrames.add(frame);
 				message.withHeader(JSON_OBJECT_MAPPER.readValue(frame, Header.class));
-				// TODO: Remove
-				System.out.println("Received header: " + new String(frame));
 				return true;
 			}
 		},
@@ -277,9 +270,6 @@ public class Protocol {
 					throws IOException {
 				jsonFrames.add(frame);
 				message.withContent(JSON_OBJECT_MAPPER.readValue(frame, Map.class));
-				// TODO: remove
-				System.out.println("Received content: " + new String(frame));
-				System.out.println();
 				return true;
 			}
 		},
