@@ -18,11 +18,22 @@ location "http://download.eclipse.org/releases/neon/" eclipse-neon {
 }
 
 location "https://bintray.com/artifact/download/pontesegger/ease-engines/" ease-engines {
-	// jython interpreter
+// jython interpreter
 	org.eclipse.ease.engine.jython.feature.feature.group [2.7.0,3.0.0)
 }
 
 location "http://download.eclipse.org/tools/orbit/downloads/drops/R20160520211859/repository/" eclipse-orbit-neon {
 	org.mockito [1.9.5,2.0.0)
 	org.hamcrest [1.1.0,2.0.0)
+	org.json
+	com.fasterxml.jackson.core.jackson-annotations
+	com.fasterxml.jackson.core.jackson-core
+	com.fasterxml.jackson.core.jackson-databind
+	org.apache.commons.lang3
+	org.apache.commons.io
+}
+
+location "http://download.eclipse.org/ease/update/release" eclipse-ease {
+	org.eclipse.ease.feature.feature.group
+	org.eclipse.ease.ui.feature.feature.group
 }
