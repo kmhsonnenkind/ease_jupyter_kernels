@@ -30,6 +30,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public class HistoryMessageHandler implements IMessageHandler {
+	public static final String REQUEST_NAME = "history_request";
+
 	/**
 	 * {@link IMessageHandlerFactory} for creating {@link HistoryMessageHandler}
 	 * objects.

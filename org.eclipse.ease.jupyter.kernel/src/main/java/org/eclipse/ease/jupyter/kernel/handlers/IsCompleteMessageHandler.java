@@ -14,11 +14,8 @@ package org.eclipse.ease.jupyter.kernel.handlers;
 import java.io.IOException;
 
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
-import org.eclipse.ease.jupyter.kernel.messages.ExecuteRequest;
 import org.eclipse.ease.jupyter.kernel.messages.IsCompleteReply;
 import org.eclipse.ease.jupyter.kernel.messages.Message;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.eclipse.ease.jupyter.kernel.messages.IsCompleteRequest;
 
@@ -29,6 +26,7 @@ import org.eclipse.ease.jupyter.kernel.messages.IsCompleteRequest;
  *
  */
 public class IsCompleteMessageHandler implements IMessageHandler {
+	public static final String REQUEST_NAME = "is_complete_request";
 
 	/**
 	 * {@link IMessageHandlerFactory} for creating
@@ -63,11 +61,6 @@ public class IsCompleteMessageHandler implements IMessageHandler {
 	}
 
 	/**
-	 * {@link ObjectMapper} to create {@link ExecuteRequest} from dictionary.
-	 */
-	private static final ObjectMapper JSON_OBJECT_MAPPER = new ObjectMapper();
-
-	/**
 	 * Abstract channel for sending replies.
 	 */
 	private AbstractChannel fReplyChannel;
@@ -88,18 +81,12 @@ public class IsCompleteMessageHandler implements IMessageHandler {
 	 */
 	@Override
 	public void handle(Message message) {
-		IsCompleteRequest request = JSON_OBJECT_MAPPER.convertValue(
-				message.getContent(), IsCompleteRequest.class);
-
-		// TODO: actually check if request is complete.
-
+		// FIXME: Find way to check if request really is complete
 		Message reply = message.createReply();
 		reply.getHeader().withMsgType("is_complete_reply");
 
-		IsCompleteReply content = new IsCompleteReply()
-				.withIndent("")
-				.withStatus(
-						org.eclipse.ease.jupyter.kernel.messages.IsCompleteReply.Status.COMPLETE);
+		IsCompleteReply content = new IsCompleteReply().withIndent("")
+				.withStatus(org.eclipse.ease.jupyter.kernel.messages.IsCompleteReply.Status.COMPLETE);
 		reply.withContent(content);
 		try {
 			fReplyChannel.send(reply);

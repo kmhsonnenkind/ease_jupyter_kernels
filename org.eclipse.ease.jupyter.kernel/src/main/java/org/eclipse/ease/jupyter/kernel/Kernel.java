@@ -75,8 +75,7 @@ public class Kernel {
 	 *            {@link IScriptEngine} to be used by kernel for execution.
 	 */
 	public Kernel(final Config config, IScriptEngine engine) {
-		// Create copy of given script engine
-		fEngine = engine.getDescription().createEngine();
+		fEngine = engine;
 		fEngine.setTerminateOnIdle(false);
 
 		// Create session

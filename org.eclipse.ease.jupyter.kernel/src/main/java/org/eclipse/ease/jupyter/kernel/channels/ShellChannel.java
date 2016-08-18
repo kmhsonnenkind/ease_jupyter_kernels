@@ -137,9 +137,6 @@ public class ShellChannel extends AbstractRunningServerChannel {
 			// Actually handle message.
 			IMessageHandler handler = factory.create();
 			handler.handle(message);
-		} else {
-			// TODO: remove
-			System.out.println("Invalid request: " + message.getHeader().getMsgType());
 		}
 	}
 

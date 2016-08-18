@@ -54,9 +54,14 @@ public class AbstractMessageHandlerFactory {
 		// Add all message handler factories
 		fFactoryMethods.put(KernelInfoMessageHandler.REQUEST_NAME,
 				new KernelInfoMessageHandler.Factory(channel, kernel));
-		fFactoryMethods.put(ExecuteMessageHandler.REQUEST_NAME, new ExecuteMessageHandler.Factory(channel, ioPub, engine));
-		fFactoryMethods.put("is_complete_request", new IsCompleteMessageHandler.Factory(channel));
-		fFactoryMethods.put("history_request", new HistoryMessageHandler.Factory(channel));
+		fFactoryMethods.put(ExecuteMessageHandler.REQUEST_NAME,
+				new ExecuteMessageHandler.Factory(channel, ioPub, engine));
+		fFactoryMethods.put(IsCompleteMessageHandler.REQUEST_NAME, new IsCompleteMessageHandler.Factory(channel));
+		fFactoryMethods.put(HistoryMessageHandler.REQUEST_NAME, new HistoryMessageHandler.Factory(channel));
+
+		// TODO: find race condition in shutdown request
+		// fFactoryMethods.put(ShutdownMessageHandler.REQUEST_NAME, new
+		// ShutdownMessageHandler.Factory(channel, kernel));
 	}
 
 	/**

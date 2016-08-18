@@ -98,7 +98,7 @@ public class KernelInfoMessageHandler implements IMessageHandler {
 		Message reply = message.createReply();
 		reply.getHeader().withMsgType(REPLY_NAME);
 
-		// TODO: Query kernel rather than hardcoding data
+		// FIXME: Query kernel rather than hardcoding data
 		KernelInfoReply content = new KernelInfoReply().withProtocolVersion("5.0").withImplementation("ease")
 				.withImplementationVersion("0.0.1").withBanner("EASE Test Kernel")
 				.withLanguageInfo(new LanguageInfo().withMimetype("text/javascript").withFileExtension(".js")

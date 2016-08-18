@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="java.lang.Object"
+            class="org.eclipse.ease.jupyter.kernel.handlers.JupyterAdapterFactory">
+         <adapter
+               type="org.eclipse.ease.jupyter.kernel.handlers.IJupyterPublishable">
+         </adapter>
+      </factory>
+   </extension>
+
+</plugin>

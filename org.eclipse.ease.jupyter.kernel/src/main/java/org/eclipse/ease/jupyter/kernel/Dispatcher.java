@@ -20,7 +20,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.ease.IScriptEngine;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,27 +39,37 @@ public class Dispatcher implements Runnable {
 	 * Connection file usually about 300 bytes so this buffer should be more
 	 * than large enough.
 	 */
-	protected static final int BUFFER_SIZE = 8192;
+	private static final int BUFFER_SIZE = 8192;
+
+	/**
+	 * Simple flag to see if {@link Dispatcher} is still running.
+	 */
+	private AtomicBoolean fRunning = new AtomicBoolean(true);
 
 	/**
 	 * Selector for non-blocking IO.
 	 */
-	protected Selector fSelector;
+	private Selector fSelector;
 
 	/**
 	 * Actual non-blocking channel for IO.
 	 */
-	protected ServerSocketChannel fChannel;
+	private ServerSocketChannel fChannel;
 
 	/**
 	 * Address to bind the server to.
 	 */
-	protected InetSocketAddress fAddress;
+	private InetSocketAddress fAddress;
 
 	/**
 	 * {@link IScriptEngine} for code execution.
 	 */
-	protected IScriptEngine fEngine;
+	private IScriptEngine fEngine;
+
+	/**
+	 * List of started kernels to be terminated on shutdown.
+	 */
+	private final Set<Kernel> fKernels = new HashSet<Kernel>();
 
 	/**
 	 * Constructor only stores information about address to run the server on.
@@ -184,6 +197,11 @@ public class Dispatcher implements Runnable {
 		// Start the kernel
 		try {
 			kernel.start();
+
+			// Add kernel to internal list
+			synchronized (fKernels) {
+				fKernels.add(kernel);
+			}
 		} catch (IOError e) {
 			e.printStackTrace();
 
@@ -245,7 +263,7 @@ public class Dispatcher implements Runnable {
 		}
 
 		// Actually perform IO
-		while (true) {
+		while (fRunning.get()) {
 			try {
 				// Non-blocking wait until event is ready
 				fSelector.select();
@@ -277,5 +295,20 @@ public class Dispatcher implements Runnable {
 				break;
 			}
 		}
+
+		// Close all started kernels
+		synchronized (fKernels) {
+			for (Kernel kernel : fKernels) {
+				kernel.stop();
+			}
+		}
+	}
+
+	/**
+	 * Stops the servers IO-loop.
+	 */
+	public void stop() {
+		fRunning.set(false);
+		fSelector.wakeup();
 	}
 }

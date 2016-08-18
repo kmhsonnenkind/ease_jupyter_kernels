@@ -199,7 +199,6 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	 */
 	private void broadcastResult(ScriptResult result, Header parentHeader) {
 		// Check if valid result given.
-		// TODO: How to handle NULL result
 		if (result == null || result.getException() != null || result.getResult() == null) {
 			return;
 		}

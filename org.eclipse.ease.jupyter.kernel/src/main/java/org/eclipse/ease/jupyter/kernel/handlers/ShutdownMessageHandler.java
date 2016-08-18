@@ -26,6 +26,8 @@ import org.eclipse.ease.jupyter.kernel.messages.ShutdownReply;
  *
  */
 public class ShutdownMessageHandler implements IMessageHandler {
+	public static final String REQUEST_NAME = "shutdown_request";
+
 	/**
 	 * {@link IMessageHandlerFactory} for creating
 	 * {@link ShutdownMessageHandler} objects.
@@ -99,7 +101,7 @@ public class ShutdownMessageHandler implements IMessageHandler {
 		Message reply = message.createReply();
 		ShutdownReply content = new ShutdownReply().withRestart(false);
 		reply = reply.withContent(content);
-		
+
 		try {
 			fReplyChannel.send(reply);
 			fKernel.stop();
