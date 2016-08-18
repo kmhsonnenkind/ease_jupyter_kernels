@@ -1,0 +1,28 @@
+target "Neon" with source requirements
+
+location "http://download.eclipse.org/releases/neon/" eclipse-neon {
+	org.eclipse.platform.feature.group
+	org.eclipse.rcp.feature.group
+	org.eclipse.jdt.feature.group
+	org.eclipse.equinox.p2.discovery.feature.feature.group
+
+	// javascript support (rhino & editors)
+	org.eclipse.wst.jsdt.feature.feature.group
+
+	// for modeling stuff
+	org.eclipse.emf.feature.group
+
+	// java module
+	org.eclipse.pde.feature.group
+	org.eclipse.jdt
+}
+
+location "https://bintray.com/artifact/download/pontesegger/ease-engines/" ease-engines {
+	// jython interpreter
+	org.eclipse.ease.engine.jython.feature.feature.group [2.7.0,3.0.0)
+}
+
+location "http://download.eclipse.org/tools/orbit/downloads/drops/R20160520211859/repository/" eclipse-orbit-neon {
+	org.mockito [1.9.5,2.0.0)
+	org.hamcrest [1.1.0,2.0.0)
+}
