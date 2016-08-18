@@ -1,2 +1,4 @@
 org.eclipse.ease.jupyter.kernel.launcher/build/
 **/*~
+**/bin
+**/*.class
