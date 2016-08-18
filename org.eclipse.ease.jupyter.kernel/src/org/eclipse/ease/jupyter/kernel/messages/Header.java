@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.HashMap;
@@ -20,8 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "msg_id", "username", "session", "msg_type", "version",
-		"date" })
+@JsonPropertyOrder({ "msg_id", "username", "session", "msg_type", "version", "date" })
 public class Header {
 
 	@JsonProperty("msg_id")
@@ -205,9 +216,8 @@ public class Header {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().append(msgId).append(username)
-				.append(session).append(msgType).append(version).append(date)
-				.append(additionalProperties).toHashCode();
+		return new HashCodeBuilder().append(msgId).append(username).append(session).append(msgType).append(version)
+				.append(date).append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -219,12 +229,9 @@ public class Header {
 			return false;
 		}
 		Header rhs = ((Header) other);
-		return new EqualsBuilder().append(msgId, rhs.msgId)
-				.append(username, rhs.username).append(session, rhs.session)
-				.append(msgType, rhs.msgType).append(version, rhs.version)
-				.append(date, rhs.date)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().append(msgId, rhs.msgId).append(username, rhs.username).append(session, rhs.session)
+				.append(msgType, rhs.msgType).append(version, rhs.version).append(date, rhs.date)
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 }

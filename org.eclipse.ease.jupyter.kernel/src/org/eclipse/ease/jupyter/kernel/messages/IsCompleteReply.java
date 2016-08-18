@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.HashMap;
@@ -102,9 +114,8 @@ public class IsCompleteReply extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode())
-				.append(status).append(indent).append(additionalProperties)
-				.toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(status).append(indent)
+				.append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -116,16 +127,13 @@ public class IsCompleteReply extends Content {
 			return false;
 		}
 		IsCompleteReply rhs = ((IsCompleteReply) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(status, rhs.status).append(indent, rhs.indent)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(status, rhs.status)
+				.append(indent, rhs.indent).append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 	public static enum Status {
 
-		COMPLETE("complete"), INCOMPLETE("incomplete"), INVALID("invalid"), UNKNOWN(
-				"unknown");
+		COMPLETE("complete"), INCOMPLETE("incomplete"), INVALID("invalid"), UNKNOWN("unknown");
 		private final String value;
 		private static Map<String, IsCompleteReply.Status> constants = new HashMap<String, IsCompleteReply.Status>();
 

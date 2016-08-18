@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.HashMap;
@@ -83,8 +95,8 @@ public class IsCompleteRequest extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode()).append(code)
-				.append(additionalProperties).toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(code).append(additionalProperties)
+				.toHashCode();
 	}
 
 	@Override
@@ -96,10 +108,8 @@ public class IsCompleteRequest extends Content {
 			return false;
 		}
 		IsCompleteRequest rhs = ((IsCompleteRequest) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(code, rhs.code)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(code, rhs.code)
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 }

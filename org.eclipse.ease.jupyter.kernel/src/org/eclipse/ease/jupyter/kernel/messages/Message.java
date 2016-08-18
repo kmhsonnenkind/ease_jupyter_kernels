@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import static org.apache.commons.lang3.Validate.notNull;
@@ -149,8 +161,7 @@ public class Message {
 	 */
 	@SuppressWarnings("unchecked")
 	public Message withContent(Content content) {
-		this.fContent = JSON_OBJECT_MAPPER.convertValue(
-				notNull(content, "content can't be null"), Map.class);
+		this.fContent = JSON_OBJECT_MAPPER.convertValue(notNull(content, "content can't be null"), Map.class);
 		return this;
 	}
 

@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.HashMap;
@@ -20,8 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "name", "version", "mimetype", "file_extension",
-		"pygments_lexer", "nbconvert_exporter" })
+@JsonPropertyOrder({ "name", "version", "mimetype", "file_extension", "pygments_lexer", "nbconvert_exporter" })
 public class LanguageInfo {
 
 	@JsonProperty("name")
@@ -205,10 +216,8 @@ public class LanguageInfo {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().append(name).append(version)
-				.append(mimetype).append(fileExtension).append(pygmentsLexer)
-				.append(nbconvertExporter).append(additionalProperties)
-				.toHashCode();
+		return new HashCodeBuilder().append(name).append(version).append(mimetype).append(fileExtension)
+				.append(pygmentsLexer).append(nbconvertExporter).append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -220,12 +229,9 @@ public class LanguageInfo {
 			return false;
 		}
 		LanguageInfo rhs = ((LanguageInfo) other);
-		return new EqualsBuilder().append(name, rhs.name)
-				.append(version, rhs.version).append(mimetype, rhs.mimetype)
-				.append(fileExtension, rhs.fileExtension)
-				.append(pygmentsLexer, rhs.pygmentsLexer)
-				.append(nbconvertExporter, rhs.nbconvertExporter)
-				.append(additionalProperties, rhs.additionalProperties)
+		return new EqualsBuilder().append(name, rhs.name).append(version, rhs.version).append(mimetype, rhs.mimetype)
+				.append(fileExtension, rhs.fileExtension).append(pygmentsLexer, rhs.pygmentsLexer)
+				.append(nbconvertExporter, rhs.nbconvertExporter).append(additionalProperties, rhs.additionalProperties)
 				.isEquals();
 	}
 

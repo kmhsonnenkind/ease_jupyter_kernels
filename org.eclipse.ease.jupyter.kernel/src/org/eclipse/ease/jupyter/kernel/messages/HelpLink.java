@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.HashMap;
@@ -100,8 +112,7 @@ public class HelpLink {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().append(text).append(url)
-				.append(additionalProperties).toHashCode();
+		return new HashCodeBuilder().append(text).append(url).append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -114,8 +125,7 @@ public class HelpLink {
 		}
 		HelpLink rhs = ((HelpLink) other);
 		return new EqualsBuilder().append(text, rhs.text).append(url, rhs.url)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 }

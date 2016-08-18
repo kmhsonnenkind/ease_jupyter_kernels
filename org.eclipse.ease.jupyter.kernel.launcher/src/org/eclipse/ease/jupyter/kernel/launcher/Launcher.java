@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.launcher;
 
 import java.io.DataInputStream;
@@ -33,8 +44,7 @@ public class Launcher {
 	public static void main(String[] args) {
 		// Check command line arguments
 		if (args.length != 3) {
-			System.err
-					.println("Invalid number of command line arguments received.");
+			System.err.println("Invalid number of command line arguments received.");
 			System.exit(-1);
 		}
 
@@ -45,8 +55,7 @@ public class Launcher {
 		try {
 			port = Integer.parseInt(args[2]);
 		} catch (NumberFormatException e) {
-			System.err
-					.println("Invalid port received, cannot be cast to integer.");
+			System.err.println("Invalid port received, cannot be cast to integer.");
 			System.exit(-2);
 			// FIXME: Bug in Java compiler not detecting System.exit()
 			throw new RuntimeException("Dead code.");
@@ -79,8 +88,7 @@ public class Launcher {
 
 			// Send data
 			try {
-				DataOutputStream outputStream = new DataOutputStream(
-						socket.getOutputStream());
+				DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
 				outputStream.write(connectionBytes);
 			} catch (IOException e) {
 				System.err.println("Could not send data to Eclipse.");
@@ -89,8 +97,7 @@ public class Launcher {
 
 			DataInputStream inputStream;
 			try {
-			inputStream = new DataInputStream(
-					socket.getInputStream());
+				inputStream = new DataInputStream(socket.getInputStream());
 			} catch (IOException e) {
 				System.err.println("Could not establish connection to Eclipse.");
 				System.exit(-4);

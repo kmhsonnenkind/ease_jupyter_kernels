@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.ArrayList;
@@ -22,8 +33,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "status", "execution_count", "payload",
-		"user_expressions", "ename", "evalue", "traceback" })
+@JsonPropertyOrder({ "status", "execution_count", "payload", "user_expressions", "ename", "evalue", "traceback" })
 public class ExecuteReply extends Content {
 
 	@JsonProperty("status")
@@ -233,10 +243,9 @@ public class ExecuteReply extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode())
-				.append(status).append(executionCount).append(payload)
-				.append(userExpressions).append(ename).append(evalue)
-				.append(traceback).append(additionalProperties).toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(status).append(executionCount).append(payload)
+				.append(userExpressions).append(ename).append(evalue).append(traceback).append(additionalProperties)
+				.toHashCode();
 	}
 
 	@Override
@@ -248,15 +257,10 @@ public class ExecuteReply extends Content {
 			return false;
 		}
 		ExecuteReply rhs = ((ExecuteReply) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(status, rhs.status)
-				.append(executionCount, rhs.executionCount)
-				.append(payload, rhs.payload)
-				.append(userExpressions, rhs.userExpressions)
-				.append(ename, rhs.ename).append(evalue, rhs.evalue)
-				.append(traceback, rhs.traceback)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(status, rhs.status)
+				.append(executionCount, rhs.executionCount).append(payload, rhs.payload)
+				.append(userExpressions, rhs.userExpressions).append(ename, rhs.ename).append(evalue, rhs.evalue)
+				.append(traceback, rhs.traceback).append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 	public static enum Status {

@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.ArrayList;
@@ -22,8 +34,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "protocol_version", "implementation",
-		"implementation_version", "language_info", "banner", "help_links" })
+@JsonPropertyOrder({ "protocol_version", "implementation", "implementation_version", "language_info", "banner",
+		"help_links" })
 public class KernelInfoReply extends Content {
 
 	@JsonProperty("protocol_version")
@@ -109,8 +121,7 @@ public class KernelInfoReply extends Content {
 		this.implementationVersion = implementationVersion;
 	}
 
-	public KernelInfoReply withImplementationVersion(
-			String implementationVersion) {
+	public KernelInfoReply withImplementationVersion(String implementationVersion) {
 		this.implementationVersion = implementationVersion;
 		return this;
 	}
@@ -209,11 +220,9 @@ public class KernelInfoReply extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode())
-				.append(protocolVersion).append(implementation)
-				.append(implementationVersion).append(languageInfo)
-				.append(banner).append(helpLinks).append(additionalProperties)
-				.toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(protocolVersion).append(implementation)
+				.append(implementationVersion).append(languageInfo).append(banner).append(helpLinks)
+				.append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -225,14 +234,10 @@ public class KernelInfoReply extends Content {
 			return false;
 		}
 		KernelInfoReply rhs = ((KernelInfoReply) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(protocolVersion, rhs.protocolVersion)
-				.append(implementation, rhs.implementation)
-				.append(implementationVersion, rhs.implementationVersion)
-				.append(languageInfo, rhs.languageInfo)
-				.append(banner, rhs.banner).append(helpLinks, rhs.helpLinks)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(protocolVersion, rhs.protocolVersion)
+				.append(implementation, rhs.implementation).append(implementationVersion, rhs.implementationVersion)
+				.append(languageInfo, rhs.languageInfo).append(banner, rhs.banner).append(helpLinks, rhs.helpLinks)
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 }

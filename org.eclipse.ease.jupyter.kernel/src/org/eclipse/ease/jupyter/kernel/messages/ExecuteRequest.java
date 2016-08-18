@@ -1,3 +1,15 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Tobias Verbeke - original implementation in Japyter project
+ *     Martin Kloesch - move to kernel project and minor reworks
+ *******************************************************************************/
+
 package org.eclipse.ease.jupyter.kernel.messages;
 
 import java.util.HashMap;
@@ -18,8 +30,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "code", "silent", "store_history", "user_expressions",
-		"allow_stdin", "stop_on_error" })
+@JsonPropertyOrder({ "code", "silent", "store_history", "user_expressions", "allow_stdin", "stop_on_error" })
 public class ExecuteRequest extends Content {
 
 	/**
@@ -212,10 +223,9 @@ public class ExecuteRequest extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode()).append(code)
-				.append(silent).append(storeHistory).append(userExpressions)
-				.append(allowStdin).append(stopOnError)
-				.append(additionalProperties).toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(code).append(silent).append(storeHistory)
+				.append(userExpressions).append(allowStdin).append(stopOnError).append(additionalProperties)
+				.toHashCode();
 	}
 
 	@Override
@@ -227,14 +237,10 @@ public class ExecuteRequest extends Content {
 			return false;
 		}
 		ExecuteRequest rhs = ((ExecuteRequest) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(code, rhs.code).append(silent, rhs.silent)
-				.append(storeHistory, rhs.storeHistory)
-				.append(userExpressions, rhs.userExpressions)
-				.append(allowStdin, rhs.allowStdin)
-				.append(stopOnError, rhs.stopOnError)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(code, rhs.code).append(silent, rhs.silent)
+				.append(storeHistory, rhs.storeHistory).append(userExpressions, rhs.userExpressions)
+				.append(allowStdin, rhs.allowStdin).append(stopOnError, rhs.stopOnError)
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
 
 }
