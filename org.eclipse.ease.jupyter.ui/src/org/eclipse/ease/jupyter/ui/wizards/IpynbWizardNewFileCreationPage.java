@@ -13,6 +13,7 @@ package org.eclipse.ease.jupyter.ui.wizards;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 import org.eclipse.ease.jupyter.ui.Activator;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -44,10 +45,20 @@ public class IpynbWizardNewFileCreationPage extends WizardNewFileCreationPage {
 	@Override
 	protected InputStream getInitialContents() {
 		try {
-			return Activator.getDefault().getBundle().getEntry("/resources/skeleton.ipynb").openStream();
+			// FIXME: Necessary during devlopment
+			URL skeletonUrl = Activator.getDefault().getBundle().getEntry("/resources/skeleton.ipynb");
+			if (skeletonUrl == null) {
+				// Load from jar rather than filesystem
+				skeletonUrl = Activator.getDefault().getBundle().getEntry("/skeleton.ipynb");
+
+			}
+			if (skeletonUrl != null) {
+				return skeletonUrl.openStream();
+			}
 		} catch (IOException e) {
-			return null;
+			// let exception fall through
 		}
+		return null;
 	}
 
 }

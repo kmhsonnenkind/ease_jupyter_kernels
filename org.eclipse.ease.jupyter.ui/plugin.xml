@@ -30,7 +30,7 @@
          point="org.eclipse.ui.editors">
       <editor
             class="org.eclipse.ease.jupyter.ui.editors.NotebookLaunchEditor"
-            default="false"
+            default="true"
             extensions="ipynb"
             id="org.eclipse.ease.jupyter.ui.notebook"
             name="Jupyter Notebook">

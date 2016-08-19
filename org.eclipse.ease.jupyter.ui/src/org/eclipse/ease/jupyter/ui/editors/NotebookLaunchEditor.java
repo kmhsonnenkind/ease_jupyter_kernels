@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 
 import org.apache.commons.io.FileUtils;
@@ -297,8 +298,25 @@ public class NotebookLaunchEditor extends EditorPart {
 
 		// Get directory for kernel to be used
 		File kernelDir = new File(new File(fDispatcherDir, "kernels"), engineDescription.getID());
-		File kernelSkeletonDir = new File(
-				FileLocator.resolve(Activator.getDefault().getBundle().getEntry("/resources/kernel_skeleton")).toURI());
+
+		// FIXME: Necessary during devlopment
+		URL kernelSkeletonUrl = Activator.getDefault().getBundle().getEntry("/resources/kernel_skeleton");
+		if (kernelSkeletonUrl == null) {
+			// Load from jar rather than filesystem
+			kernelSkeletonUrl = Activator.getDefault().getBundle().getEntry("/kernel_skeleton");
+		}
+
+		// Check if resource could be found
+		if (kernelSkeletonUrl == null) {
+			throw new IOException("Could not find Jupyter kernel skeleton in plugin.");
+		}
+
+		// Escape OS specific characters (like ':' for Windows drives)
+		// See:
+		// http://stackoverflow.com/questions/10144210/java-jar-file-use-resource-errors-uri-is-not-hierarchical
+		kernelSkeletonUrl = FileLocator.toFileURL(kernelSkeletonUrl);
+		URI kernelSkeletonUri = new URI(kernelSkeletonUrl.getProtocol(), kernelSkeletonUrl.getPath(), null);
+		File kernelSkeletonDir = new File(kernelSkeletonUri);
 
 		// Copy directory skeleton
 		FileUtils.copyDirectory(kernelSkeletonDir, kernelDir);
@@ -307,8 +325,7 @@ public class NotebookLaunchEditor extends EditorPart {
 		fDispatcherPort = getFreePort(50000);
 		File kernelFile = new File(kernelDir, "kernel.json");
 		File launcherFile = new File(kernelDir, "org.eclipse.ease.jupyter.kernel.launcher.jar");
-		populateKernelTempatefile(kernelFile, launcherFile.getCanonicalPath(), fDispatcherPort,
-				engineDescription.getName());
+		populateKernelTempatefile(kernelFile, launcherFile, fDispatcherPort, engineDescription.getName());
 	}
 
 	/**
@@ -354,9 +371,9 @@ public class NotebookLaunchEditor extends EditorPart {
 	 * 
 	 * @param templateFile
 	 *            the "kernel.json" template file to be patched.
-	 * @param launcherPath
-	 *            Path to "org.eclipse.ease.jupyter.kernel.launcher.jar" file to
-	 *            be used. Must be accessible by forked processes.
+	 * @param launcherFile
+	 *            "org.eclipse.ease.jupyter.kernel.launcher.jar" file to be
+	 *            used. Must be accessible by forked processes.
 	 * 
 	 * @param dispatcherPort
 	 *            Port the {@link Dispatcher} is listening on.
@@ -364,13 +381,15 @@ public class NotebookLaunchEditor extends EditorPart {
 	 *            User-friendly name of the {@link IScriptEngine} used.
 	 * @throws IOException
 	 */
-	private static void populateKernelTempatefile(final File templateFile, final String launcherPath,
-			int dispatcherPort, final String engineName) throws IOException {
+	private static void populateKernelTempatefile(final File templateFile, final File launcherFile, int dispatcherPort,
+			final String engineName) throws IOException {
 		// Get template file contents
 		String skeletonContent = FileUtils.readFileToString(templateFile);
 
 		// Patch contents
-		String patched = skeletonContent.replace("@@launcher@@", launcherPath)
+		// FIXME: problem when kernel.json file contains single backslashes
+		// under windows
+		String patched = skeletonContent.replace("@@launcher@@", launcherFile.getCanonicalPath().replace('\\', '/'))
 				.replaceAll("@@dispatcherport@@", Integer.toString(dispatcherPort))
 				.replace("@@enginename@@", engineName);
 
