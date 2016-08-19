@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.eclipse.ease.jupyter.feature_0.0.1.qualifier.jar" id="org.eclipse.ease.jupyter.feature" version="0.0.1.qualifier">
+      <category name="org.eclipse.ease.jupyter.category"/>
+   </feature>
+   <category-def name="org.eclipse.ease.jupyter.category" label="EASE Jupyter Integation">
+      <description>
+         EASE script engines as kernels for Jupyter.
+      </description>
+   </category-def>
+</site>
