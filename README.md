@@ -67,6 +67,11 @@ Once you have created the notebook file you can start it by simply double-clicki
 **Note:** As the **EASE Jupyter Kernels** need the EASE script engines it is (currently) only possible to use them directly from Eclipse.
 
 
+## Developers:
+
+See the [Developer Documentation](DEVELOPERS.md) for more information.
+
+
 ## License:
 
 Licensed under [Eclipse Public License - v 1.0](https://www.eclipse.org/legal/epl-v10.html)
