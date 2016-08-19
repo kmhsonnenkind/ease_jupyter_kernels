@@ -137,13 +137,13 @@ Once the browser closes all steps are reversed:
 + The temporary kernel directory is deleted.
 
 
-#### (Potential) Troubleshooting
+## (Potential) Troubleshooting
 
-In most cases this behaviour is perfectly fine, but if Eclipse shuts down abruptly and forcefully it might be that either the **jupyter** process is still running or the temporary kernel directory is not deleted.
+In most cases the behaviour described in **Jupyter <-> EASE (advanced)** is perfectly fine, but if Eclipse shuts down abruptly and forcefully it might be that either the **jupyter** process is still running or the temporary kernel directory is not deleted.
 
 Neither of these things should be an issue but for users that want to clean up their system the following tricks can help:
 
-##### Kill Jupyter Notebooks:
+### Kill Jupyter Notebooks:
 
 **jupyter-notebook _list_** will output a list of currently running Jupyter servers.
 If you find any servers that should not be there try to close the corresponding processes.
@@ -152,7 +152,7 @@ Under _Linux_ (and most likely _Mac_) you can use: fuser -k _PORT_/tcp
 
 Under _Windows_ you will probably use **netstat** to find the _PID_ for the process holding the Jupyter port and then kill said process using e.g. _taskmanager_.
 
-##### Clear Temporary Kernel Directories:
+### Clear Temporary Kernel Directories:
 
 To remove any old temporary kernel directories you need to look for directories named **ease\_jupyter\_kernel\__RANDOMNUMBER_** in your system's temporary directory.
 
