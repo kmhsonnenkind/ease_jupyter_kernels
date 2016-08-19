@@ -23,7 +23,6 @@ import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.dialogs.WizardNewFileCreationPage;
 
 /**
  * Custom wizard for creating new EASE Jupyter notebooks.
@@ -38,7 +37,7 @@ public class IpynbWizard extends Wizard implements INewWizard {
 	/**
 	 * New file creation wizard page used for actually creating new file.
 	 */
-	private WizardNewFileCreationPage fNewFilePage = null;
+	private IpynbWizardNewFileCreationPage fNewFilePage = null;
 
 	/**
 	 * {@link IWizardPage} used for querying for {@link IScriptEngine}.
@@ -80,8 +79,11 @@ public class IpynbWizard extends Wizard implements INewWizard {
 	@Override
 	public boolean performFinish() {
 		// Get file to create
+		fNewFilePage.createStandardNotebook(fEnginePage.createStandardNotebook());
 		IFile file = fNewFilePage.createNewFile();
-		if (file != null) {
+
+		// Check if skeleton needs to be populated
+		if (file != null && fEnginePage.createStandardNotebook()) {
 			// Read skeleton content
 			String skeleton = ResourceTools.resourceToString(file);
 			if (skeleton == null) {
@@ -101,9 +103,10 @@ public class IpynbWizard extends Wizard implements INewWizard {
 				return true;
 			} catch (CoreException e) {
 				e.printStackTrace();
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 }

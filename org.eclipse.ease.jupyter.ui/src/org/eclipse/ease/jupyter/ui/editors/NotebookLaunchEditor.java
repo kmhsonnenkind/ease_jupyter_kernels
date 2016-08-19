@@ -112,29 +112,37 @@ public class NotebookLaunchEditor extends EditorPart {
 
 		// Get information about script engine to be used
 		EngineDescription engineDescription = parseFileForEngine(fNotebookFile);
+
 		if (engineDescription == null) {
-			throw new PartInitException(
-					"Jupyter ipynb file was not created using eclipse and is therefore missing required launch information.");
-		}
+			// Just launch and hope for standard Jupyter file
+			try {
+				fJupyterProcess = startJupyterProcess();
+			} catch (IOException e) {
+				throw new PartInitException(
+						new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e));
+			}
+		} else {
+			// Otherwise start up custom kernel
 
-		// Create dispatcher directory from skeleton
-		try {
-			initKernelDir(engineDescription);
-		} catch (IOException | URISyntaxException e) {
-			throw new PartInitException(new Status(Status.ERROR, Activator.PLUGIN_ID,
-					"Could not create temporary Jupyter kernel directory for EASE kernel.", e));
-		}
+			// Create dispatcher directory from skeleton
+			try {
+				initKernelDir(engineDescription);
+			} catch (IOException | URISyntaxException e) {
+				throw new PartInitException(new Status(Status.ERROR, Activator.PLUGIN_ID,
+						"Could not create temporary Jupyter kernel directory for EASE kernel.", e));
+			}
 
-		// Launch Jupyter process
-		try {
-			fJupyterProcess = startJupyterProcess();
-		} catch (IOException e) {
-			throw new PartInitException(
-					new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e));
-		}
+			// Launch Jupyter process
+			try {
+				fJupyterProcess = startJupyterProcess();
+			} catch (IOException e) {
+				throw new PartInitException(
+						new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e));
+			}
 
-		// Create dispatcher for receiving connections to kernel
-		startDispatcherThread(engineDescription);
+			// Create dispatcher for receiving connections to kernel
+			startDispatcherThread(engineDescription);
+		}
 	}
 
 	/*
@@ -235,6 +243,16 @@ public class NotebookLaunchEditor extends EditorPart {
 			}
 		}
 
+		// Delete temporary files
+		if (fDispatcherDir != null && fDispatcherDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(fDispatcherDir);
+			} catch (IOException e) {
+				// Ignore
+				e.printStackTrace();
+			}
+		}
+
 		// Refresh file just to be sure
 		if (fNotebookFile != null && fNotebookFile.exists()) {
 			try {
@@ -299,7 +317,7 @@ public class NotebookLaunchEditor extends EditorPart {
 		// Get directory for kernel to be used
 		File kernelDir = new File(new File(fDispatcherDir, "kernels"), engineDescription.getID());
 
-		// FIXME: Necessary during devlopment
+		// FIXME: Necessary during development
 		URL kernelSkeletonUrl = Activator.getDefault().getBundle().getEntry("/resources/kernel_skeleton");
 		if (kernelSkeletonUrl == null) {
 			// Load from jar rather than filesystem
@@ -415,7 +433,9 @@ public class NotebookLaunchEditor extends EditorPart {
 		processBuilder.directory(new File(workspaceDir));
 
 		// Patch environment variables for Jupyter to find kernels
-		processBuilder.environment().put("JUPYTER_PATH", fDispatcherDir.getCanonicalPath());
+		if (fDispatcherDir != null) {
+			processBuilder.environment().put("JUPYTER_PATH", fDispatcherDir.getCanonicalPath());
+		}
 
 		// Actually create process
 		return processBuilder.start();

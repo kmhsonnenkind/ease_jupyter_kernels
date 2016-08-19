@@ -24,6 +24,7 @@ import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
@@ -40,10 +41,18 @@ public class IpynbWizardEnginePage extends WizardPage {
 	 */
 	private Combo fEngineSelect;
 
+	/**
+	 * Checkbox to create "plain" Jupyter notebook file.
+	 */
+	private Button fStandardNotebookButton;
+
+	/**
+	 * Constructor sets title, description and state.
+	 */
 	public IpynbWizardEnginePage() {
 		super("Jupyter Notebook");
 		setTitle("Jupyter Notebook");
-		setDescription("Information about EASE Jupyter Notebook");
+		setDescription("Information about Jupyter Notebook");
 
 		// User must select engine at least once
 		setPageComplete(false);
@@ -62,9 +71,10 @@ public class IpynbWizardEnginePage extends WizardPage {
 
 		GridLayoutFactory.swtDefaults().numColumns(2).applyTo(comp);
 
-		Label label = new Label(comp, SWT.NONE);
-		label.setText("Select Script Engine for Launch: ");
-		GridDataFactory.swtDefaults().applyTo(label);
+		// EASE script engine select
+		Label engineSelectLabel = new Label(comp, SWT.NONE);
+		engineSelectLabel.setText("Select Script Engine for Launch: ");
+		GridDataFactory.swtDefaults().applyTo(engineSelectLabel);
 
 		List<String> engines = new ArrayList<String>();
 		for (EngineDescription engine : ScriptService.getService().getEngines()) {
@@ -86,6 +96,40 @@ public class IpynbWizardEnginePage extends WizardPage {
 			}
 		});
 		GridDataFactory.swtDefaults().applyTo(fEngineSelect);
+
+		// Checkbox to see if normal Jupyter file
+		fStandardNotebookButton = new Button(comp, SWT.CHECK);
+		fStandardNotebookButton.setText("Create Jupyter notebook file without EASE kernel");
+		fStandardNotebookButton.setSelection(false);
+		fStandardNotebookButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (fStandardNotebookButton.getSelection()) {
+					setPageComplete(true);
+				} else {
+					if (fEngineSelect.getSelectionIndex() == -1) {
+						setPageComplete(false);
+					}
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+		GridDataFactory.swtDefaults().span(2, 1).applyTo(fStandardNotebookButton);
+
+	}
+
+	/**
+	 * Checks if the user wants to create a standard Jupyter notebook file
+	 * without an EASE kernel.
+	 * 
+	 * @return <code>true</code> if standard notebook file should be created.
+	 */
+	public boolean createStandardNotebook() {
+		return fStandardNotebookButton.getSelection();
 	}
 
 	/**
