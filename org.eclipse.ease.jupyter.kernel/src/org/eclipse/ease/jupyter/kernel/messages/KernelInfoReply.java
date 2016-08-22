@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,6 +55,27 @@ public class KernelInfoReply extends Content {
 	private List<HelpLink> helpLinks = new ArrayList<HelpLink>();
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public KernelInfoReply() {
+
+	}
+
+	@JsonCreator
+	public KernelInfoReply(@JsonProperty(value = "protocol_version", required = true) final String protocolVersion,
+			@JsonProperty(value = "implementation", required = true) final String implementation,
+			@JsonProperty(value = "implementation_version", required = true) final String implementationVersion,
+			@JsonProperty(value = "language_info", required = true) final LanguageInfo languageInfo,
+			@JsonProperty(value = "banner", required = true) final String banner,
+			@JsonProperty(value = "help_links", required = false) final List<HelpLink> helpLinks) {
+		this.protocolVersion = protocolVersion;
+		this.implementation = implementation;
+		this.implementationVersion = implementationVersion;
+		this.languageInfo = languageInfo;
+		this.banner = banner;
+		if (helpLinks != null) {
+			this.helpLinks = helpLinks;
+		}
+	}
 
 	/**
 	 * 
@@ -248,7 +270,10 @@ public class KernelInfoReply extends Content {
 	 */
 	@Override
 	public void validate() throws JsonMappingException {
-
+		if (this.protocolVersion == null || this.implementation == null || this.implementationVersion == null
+				|| this.languageInfo == null || this.banner == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

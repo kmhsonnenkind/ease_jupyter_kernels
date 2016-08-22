@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,6 +44,21 @@ public class ExecuteResult extends Content {
 	private Map<String, Object> metadata;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public ExecuteResult() {
+
+	}
+
+	@JsonCreator
+	public ExecuteResult(@JsonProperty(value = "execution_count", required = true) final Integer executionCount,
+
+			@JsonProperty(value = "data", required = true) final Map<String, Object> data,
+			@JsonProperty(value = "metadata", required = true) final Map<String, Object> metadata) {
+
+		this.executionCount = executionCount;
+		this.data = data;
+		this.metadata = metadata;
+	}
 
 	/**
 	 * 
@@ -163,7 +179,9 @@ public class ExecuteResult extends Content {
 	 */
 	@Override
 	public void validate() throws JsonMappingException {
-
+		if (this.executionCount == null || this.data == null || this.metadata == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

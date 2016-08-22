@@ -45,6 +45,17 @@ public class IsCompleteReply extends Content {
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+	public IsCompleteReply() {
+
+	}
+
+	@JsonCreator
+	public IsCompleteReply(@JsonProperty(value = "status", required = true) final IsCompleteReply.Status status,
+			@JsonProperty(value = "indent", required = false) final String indent) {
+		this.status = status;
+		this.indent = indent;
+	}
+
 	/**
 	 * 
 	 * @return The status
@@ -173,7 +184,9 @@ public class IsCompleteReply extends Content {
 	 */
 	@Override
 	public void validate() throws JsonMappingException {
-
+		if (this.status == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

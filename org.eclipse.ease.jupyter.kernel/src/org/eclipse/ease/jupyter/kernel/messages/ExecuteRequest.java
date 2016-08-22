@@ -283,7 +283,7 @@ public class ExecuteRequest extends Content {
 	@Override
 	public void validate() throws JsonMappingException {
 		if (this.code == null) {
-			throw new JsonMappingException("Missing parameters.");
+			throw new JsonMappingException("Missing parameter.");
 		}
 	}
 

@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,6 +43,15 @@ public class HistoryReply extends Content {
 	private List<List<Object>> history = new ArrayList<List<Object>>();
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public HistoryReply() {
+
+	}
+
+	@JsonCreator
+	public HistoryReply(@JsonProperty(value = "history", required = true) final List<List<Object>> history) {
+		this.history = history;
+	}
 
 	/**
 	 * 
@@ -113,7 +123,9 @@ public class HistoryReply extends Content {
 	 */
 	@Override
 	public void validate() throws JsonMappingException {
-
+		if (this.history == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

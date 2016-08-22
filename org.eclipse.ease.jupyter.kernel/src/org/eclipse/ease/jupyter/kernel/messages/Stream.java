@@ -153,7 +153,7 @@ public class Stream extends Content {
 	@Override
 	public void validate() throws JsonMappingException {
 		if (this.name == null || this.text == null) {
-			throw new JsonMappingException("Missing parameter");
+			throw new JsonMappingException("Missing parameter.");
 		}
 	}
 
