@@ -20,7 +20,7 @@ import java.util.Map;
  * 
  * Currently only String representation of arrays are created.
  */
-public class ArrayPublishable implements IJupyterPublishable {
+public class ListPublishable implements IJupyterPublishable {
 	/**
 	 * Size threshold for array formatting.
 	 * 
@@ -31,7 +31,7 @@ public class ArrayPublishable implements IJupyterPublishable {
 	/**
 	 * Temporarily holds string value.
 	 */
-	private final Object[] fValue;
+	private final List<?> fValue;
 
 	/**
 	 * Constructor only stores parameters to member.
@@ -39,7 +39,7 @@ public class ArrayPublishable implements IJupyterPublishable {
 	 * @param value
 	 *            Value to be published as string.
 	 */
-	public ArrayPublishable(Object[] value) {
+	public ListPublishable(List<?> value) {
 		fValue = value;
 	}
 
@@ -50,8 +50,8 @@ public class ArrayPublishable implements IJupyterPublishable {
 		String representation;
 
 		// Check if too much data
-		if (fValue.length > SIZE_THRESHOLD) {
-			representation = String.format("Array[%d]", fValue.length);
+		if (fValue.size() > SIZE_THRESHOLD) {
+			representation = String.format("List[%d]", fValue.size());
 		} else {
 			// Otherwise create string for each element
 			List<String> asList = new ArrayList<String>();
