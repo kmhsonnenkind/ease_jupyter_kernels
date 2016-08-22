@@ -89,11 +89,11 @@ Otherwise you can contact me by [mail](mailto:martin.kloesch@gmail.com).
 
 See the [Developer Documentation](DEVELOPERS.md) for more information.
 
+Also check out the EASE [mailing list](https://dev.eclipse.org/mailman/listinfo/ease-dev).
 
 ## License:
 
 Licensed under [Eclipse Public License - v 1.0](https://www.eclipse.org/legal/epl-v10.html)
-
 
 
 ## Notes:
@@ -108,3 +108,7 @@ As the [commons-codec](https://commons.apache.org/proper/commons-codec/) version
 
 As the [jeromq](https://github.com/zeromq/jeromq) library for the ZeroMQ protocol is not available in Orbit, the unmodified binaries of version 0.3.5 have been copied to *org.eclipse.ease.jupyter.kernel/lib*.
 
+
+## GSOC:
+
+All commits up to the deadline by me, Martin Kloesch (kmhsonnenkind).
