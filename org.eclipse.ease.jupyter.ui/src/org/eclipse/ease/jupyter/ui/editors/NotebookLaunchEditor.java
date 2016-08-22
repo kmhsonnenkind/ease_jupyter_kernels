@@ -25,10 +25,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Dispatcher;
 import org.eclipse.ease.jupyter.ui.Activator;
@@ -36,8 +33,10 @@ import org.eclipse.ease.service.EngineDescription;
 import org.eclipse.ease.service.IScriptService;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
@@ -229,16 +228,14 @@ public class NotebookLaunchEditor extends EditorPart {
 	 */
 	@Override
 	public void dispose() {
-		Job cleanupJob = new Job("Shutting down Jupyter") {
+		Runnable cleanupRunner = new Runnable() {
 			private static final int DELETION_RETRIES = 5;
 			private static final int DELETION_SLEEP = 500;
 
 			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				SubMonitor subMonitor = SubMonitor.convert(monitor, 4);
+			public void run() {
 
 				// Shut down process
-				subMonitor.setTaskName("Killing Jupyter process...");
 				if (fJupyterProcess != null && fJupyterProcess.isAlive()) {
 					fJupyterProcess.destroy();
 					try {
@@ -249,7 +246,6 @@ public class NotebookLaunchEditor extends EditorPart {
 				}
 
 				// Close the dispatcher
-				subMonitor.setTaskName("Stopping dispatcher...");
 				if (fDispatcher != null) {
 					fDispatcher.stop();
 					if (fDispatcherThread != null) {
@@ -262,7 +258,6 @@ public class NotebookLaunchEditor extends EditorPart {
 				}
 
 				// Delete temporary files
-				subMonitor.setTaskName("Deleting temporary file...");
 				if (fDispatcherDir != null && fDispatcherDir.exists()) {
 
 					// Try a couple of time because process might still lock
@@ -283,7 +278,6 @@ public class NotebookLaunchEditor extends EditorPart {
 				}
 
 				// Refresh file just to be sure
-				subMonitor.setTaskName("Refreshing notebook file...");
 				if (fNotebookFile != null && fNotebookFile.exists()) {
 					try {
 						fNotebookFile.refreshLocal(0, null);
@@ -291,11 +285,9 @@ public class NotebookLaunchEditor extends EditorPart {
 						// Ignore and ask user to refresh later
 					}
 				}
-				return Status.OK_STATUS;
 			}
 		};
-		cleanupJob.schedule();
-
+		BusyIndicator.showWhile(Display.getDefault(), cleanupRunner);
 		super.dispose();
 	}
 
