@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: EASE Jupyter Kernel tests
+Bundle-SymbolicName: org.eclipse.ease.jupyter.kernel.test
+Bundle-Version: 0.0.1.qualifier
+Bundle-Vendor: Eclipse.org
+Fragment-Host: org.eclipse.ease.jupyter.kernel;bundle-version="0.0.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.junit;bundle-version="4.12.0",
+ org.apache.commons.io;bundle-version="2.2.0"
+Bundle-ClassPath: resources/,
+ .

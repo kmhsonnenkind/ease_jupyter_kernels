@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.ease.IScriptEngine;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -67,7 +68,7 @@ public class Dispatcher implements Runnable {
 	private IScriptEngine fEngine;
 
 	/**
-	 * List of started kernels to be terminated on shutdown.
+	 * Set of started kernels to be terminated on shutdown.
 	 */
 	private final Set<Kernel> fKernels = new HashSet<Kernel>();
 
@@ -130,7 +131,6 @@ public class Dispatcher implements Runnable {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-
 			// If opened, then close SocketChannel
 			if (socketChannel != null) {
 				try {
@@ -170,29 +170,24 @@ public class Dispatcher implements Runnable {
 
 		// Check if connection is closed
 		if (bytesRead <= 0) {
-			try {
-				socketChannel.close();
-			} catch (IOException e) {
-				// Ignore as we are shutting down anyways
-			}
-			selectionKey.cancel();
+			closeConncection(selectionKey);
 			return;
 		}
 
 		// Parse data
 		Config config = null;
 		try {
-			config = new ObjectMapper().readValue(buffer.array(), Config.class);
+			byte[] configBytes = buffer.array();
+			config = parseConfig(configBytes);
 		} catch (IOException e) {
+			// Invalid data received, close connection
 			e.printStackTrace();
+			closeConncection(selectionKey);
 			return;
 		}
 
 		// Actually build the kernel
 		Kernel kernel = new Kernel(config, fEngine);
-
-		// Get the attachment to be able to write back data
-		ByteBuffer sendBuffer = (ByteBuffer) selectionKey.attachment();
 
 		// Start the kernel
 		try {
@@ -204,47 +199,44 @@ public class Dispatcher implements Runnable {
 			}
 		} catch (IOError e) {
 			e.printStackTrace();
-
-			// Asynchronously send back error code
-			synchronized (sendBuffer) {
-				sendBuffer.putInt(-1);
-			}
-			selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+			// Close connection
+			closeConncection(selectionKey);
 		}
 	}
 
 	/**
-	 * Callback triggered when data can be written to socket.
+	 * Parses the given bytes representing a {@link Config} object to an actual
+	 * object.
+	 * <p>
+	 * Performs validation using {@link Config#validate()}.
+	 * 
+	 * @param configBytes
+	 *            byte representation of {@link Config} object.
+	 * @return {@link Config} object based on bytes.
+	 * @throws IOException
+	 *             If invalid data received.
+	 */
+	protected static Config parseConfig(byte[] configBytes) throws IOException {
+		Config config = new ObjectMapper().readValue(configBytes, Config.class);
+		config.validate();
+		return config;
+	}
+
+	/**
+	 * Closes the connection specified by the given {@link SelectionKey}.
 	 * 
 	 * @param selectionKey
-	 *            {@link SelectionKey} with information about the connection we
-	 *            can write to.
-	 * @throws IOException
-	 *             If data could not be written.
+	 *            {@link SelectionKey} with information about connection to be
+	 *            closed.
 	 */
-	protected void write(SelectionKey selectionKey) {
-		// Get necessary objects from selection key
+	protected void closeConncection(SelectionKey selectionKey) {
 		SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-		ByteBuffer writeBuffer = (ByteBuffer) selectionKey.attachment();
-
-		// Actually write data
-		synchronized (writeBuffer) {
-			try {
-				socketChannel.write(writeBuffer);
-			} catch (IOException e) {
-				try {
-					socketChannel.close();
-				} catch (IOException e2) {
-					// Ignore as we are shutting down anyways
-				}
-				selectionKey.cancel();
-				return;
-			}
-			writeBuffer.clear();
+		try {
+			socketChannel.close();
+		} catch (IOException e) {
+			// ignore
 		}
-
-		// Remove interest from writing
-		selectionKey.interestOps(SelectionKey.OP_READ);
+		selectionKey.cancel();
 	}
 
 	/**
@@ -273,7 +265,7 @@ public class Dispatcher implements Runnable {
 				while (selectedKeys.hasNext()) {
 					SelectionKey key = selectedKeys.next();
 
-					// Remove event, otherwise it will be retriggered
+					// Remove event, otherwise it will be re-triggered
 					selectedKeys.remove();
 
 					if (!key.isValid()) {
@@ -285,8 +277,6 @@ public class Dispatcher implements Runnable {
 						accept(key);
 					} else if (key.isReadable()) {
 						read(key);
-					} else if (key.isWritable()) {
-						write(key);
 					}
 				}
 

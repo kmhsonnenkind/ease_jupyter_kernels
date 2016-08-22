@@ -15,10 +15,13 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -53,6 +56,50 @@ public class Config {
 	private Integer stdinPort;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	@JsonCreator
+	public Config(@JsonProperty(value = "ip", required = true) String ip,
+			@JsonProperty(value = "transport", required = true) String transport,
+			@JsonProperty(value = "key", required = true) String key,
+			@JsonProperty(value = "signature_scheme", required = true) String signatureScheme,
+			@JsonProperty(value = "control_port", required = true) Integer controlPort,
+			@JsonProperty(value = "hb_port", required = true) Integer hbPort,
+			@JsonProperty(value = "shell_port", required = true) Integer shellPort,
+			@JsonProperty(value = "iopub_port", required = true) Integer iopubPort,
+			@JsonProperty(value = "stdinPort", required = true) Integer stdinPort,
+			@JsonProperty(value = "additionalProperties", required = false) Map<String, Object> additionalProperties) {
+		this.ip = ip;
+		this.transport = transport;
+		this.key = key;
+		this.signatureScheme = signatureScheme;
+		this.controlPort = controlPort;
+		this.hbPort = hbPort;
+		this.shellPort = shellPort;
+		this.iopubPort = iopubPort;
+		this.stdinPort = stdinPort;
+		if (additionalProperties == null) {
+			additionalProperties = new HashMap<String, Object>();
+		}
+		this.additionalProperties = additionalProperties;
+	}
+
+	/**
+	 * Checks that all required values are set.
+	 * <p>
+	 * TODO: Jackson library from orbit currently does not support parameter
+	 * validation during de-serialization therefore this method was added.
+	 * 
+	 * @throws JsonMappingException
+	 *             If required parameter missing.
+	 */
+	public void validate() throws JsonMappingException {
+		// Check that all required values are not null
+		if (this.ip == null || this.transport == null || this.key == null || this.signatureScheme == null
+				|| this.controlPort == null || this.hbPort == null || this.shellPort == null || this.iopubPort == null
+				|| this.stdinPort == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
+	}
 
 	/**
 	 * 
