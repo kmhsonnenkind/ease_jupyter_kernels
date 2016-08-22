@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
-            adaptableType="java.lang.Object"
+            adaptableType="java.util.List"
             class="org.eclipse.ease.jupyter.kernel.handlers.JupyterAdapterFactory">
          <adapter
                type="org.eclipse.ease.jupyter.kernel.handlers.IJupyterPublishable">
