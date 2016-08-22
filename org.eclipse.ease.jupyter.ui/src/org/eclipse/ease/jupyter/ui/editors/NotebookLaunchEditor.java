@@ -33,10 +33,8 @@ import org.eclipse.ease.service.EngineDescription;
 import org.eclipse.ease.service.IScriptService;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
@@ -88,6 +86,20 @@ public class NotebookLaunchEditor extends EditorPart {
 	 * Temporary directory containing EASE kernel to be used for the notebook.
 	 */
 	private File fDispatcherDir;
+
+	/**
+	 * Number of retries for deleting temporary directory.
+	 * <p>
+	 * Jupyter subprocesses take too long to shut down so we need to retry.
+	 */
+	private static final int DELETION_RETRIES = 5;
+
+	/**
+	 * Milliseconds to sleep between retrying deltion of temporary directories.
+	 * <p>
+	 * Jupyter subprocesses take too long to shut down so we need to retry.
+	 */
+	private static final int DELETION_SLEEP = 500;
 
 	/*
 	 * (non-Javadoc)
@@ -228,67 +240,58 @@ public class NotebookLaunchEditor extends EditorPart {
 	 */
 	@Override
 	public void dispose() {
-		Runnable cleanupRunner = new Runnable() {
-			private static final int DELETION_RETRIES = 5;
-			private static final int DELETION_SLEEP = 500;
+		// FIXME: Rather do this asynchronously, but problem with shutdown
 
-			@Override
-			public void run() {
+		// Shut down process
+		if (fJupyterProcess != null && fJupyterProcess.isAlive()) {
+			fJupyterProcess.destroy();
+			try {
+				fJupyterProcess.waitFor();
+			} catch (InterruptedException e) {
+				// Hope that process shut down
+			}
+		}
 
-				// Shut down process
-				if (fJupyterProcess != null && fJupyterProcess.isAlive()) {
-					fJupyterProcess.destroy();
+		// Close the dispatcher
+		if (fDispatcher != null) {
+			fDispatcher.stop();
+			if (fDispatcherThread != null) {
+				try {
+					fDispatcherThread.join();
+				} catch (InterruptedException e) {
+					// ignore
+				}
+			}
+		}
+
+		// Delete temporary files
+		if (fDispatcherDir != null && fDispatcherDir.exists()) {
+
+			// Try a couple of time because process might still lock
+			// directory
+			for (int i = 0; i < DELETION_RETRIES; i++) {
+				try {
+					FileUtils.deleteDirectory(fDispatcherDir);
+					break;
+				} catch (IOException e) {
+					// Sleep a bit and then retry
 					try {
-						fJupyterProcess.waitFor();
-					} catch (InterruptedException e) {
-						// Hope that process shut down
-					}
-				}
-
-				// Close the dispatcher
-				if (fDispatcher != null) {
-					fDispatcher.stop();
-					if (fDispatcherThread != null) {
-						try {
-							fDispatcherThread.join();
-						} catch (InterruptedException e) {
-							// ignore
-						}
-					}
-				}
-
-				// Delete temporary files
-				if (fDispatcherDir != null && fDispatcherDir.exists()) {
-
-					// Try a couple of time because process might still lock
-					// directory
-					for (int i = 0; i < DELETION_RETRIES; i++) {
-						try {
-							FileUtils.deleteDirectory(fDispatcherDir);
-							break;
-						} catch (IOException e) {
-							// Sleep a bit and then retry
-							try {
-								Thread.sleep(DELETION_SLEEP);
-							} catch (InterruptedException e2) {
-								// Ignore
-							}
-						}
-					}
-				}
-
-				// Refresh file just to be sure
-				if (fNotebookFile != null && fNotebookFile.exists()) {
-					try {
-						fNotebookFile.refreshLocal(0, null);
-					} catch (CoreException e) {
-						// Ignore and ask user to refresh later
+						Thread.sleep(DELETION_SLEEP);
+					} catch (InterruptedException e2) {
+						// Ignore
 					}
 				}
 			}
-		};
-		BusyIndicator.showWhile(Display.getDefault(), cleanupRunner);
-		super.dispose();
+		}
+
+		// Refresh file just to be sure
+		if (fNotebookFile != null && fNotebookFile.exists()) {
+			try {
+				fNotebookFile.refreshLocal(0, null);
+			} catch (CoreException e) {
+				// Ignore and ask user to refresh later
+			}
+		}
 	}
 
 	/**
