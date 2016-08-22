@@ -81,7 +81,7 @@ The easiest way to report bugs is to use the official Eclipse [bug-tracker](http
 The project is currently not hosted on Eclipse as the external requirements do not match the necessary criteria.
 Nevertheless the bug-tracker can be used.
 
-Otherwise you can contact me by [mail](maito://martin.kloesch@gmail.com).
+Otherwise you can contact me by [mail](mailto:martin.kloesch@gmail.com) (martin.kloesch (at) gmail.com).
 
 
 
