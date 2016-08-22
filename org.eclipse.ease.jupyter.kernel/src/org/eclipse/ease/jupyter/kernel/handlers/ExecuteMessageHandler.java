@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.ease.IScriptEngine;
@@ -256,7 +257,30 @@ public class ExecuteMessageHandler implements IMessageHandler {
 
 	}
 
-	private static final Object LOCK = new Object();
+	/**
+	 * Mappings from {@link IScriptEngine} to corresponding lock.
+	 * <p>
+	 * We cannot directly lock on {@link IScriptEngine} because code execution
+	 * is happening in another thread. Therefore we need placeholder objects.
+	 */
+	private static final Map<IScriptEngine, Object> LOCKS = new HashMap<IScriptEngine, Object>();
+
+	/**
+	 * Gets a simple lock object for given {@link IScriptEngine}.
+	 * <p>
+	 * As we cannot lock on {@link IScriptEngine} directly we need placeholder
+	 * objects.
+	 * 
+	 * @param engine
+	 *            {@link IScriptEngine} to get lock for.
+	 * @return Lock object for given {@link IScriptEngine}.
+	 */
+	private static synchronized Object getLock(IScriptEngine engine) {
+		if (!LOCKS.containsKey(engine)) {
+			LOCKS.put(engine, new Object());
+		}
+		return LOCKS.get(engine);
+	}
 
 	/**
 	 * Handles the message by executing the code and sending the result back.
@@ -266,10 +290,8 @@ public class ExecuteMessageHandler implements IMessageHandler {
 		// Parse request to more easily usable format.
 		ExecuteRequest request = JSON_OBJECT_MAPPER.convertValue(message.getContent(), ExecuteRequest.class);
 		String code = request.getCode();
-		// String session = message.getHeader().getSession();
 
-		// TODO: think how we could lock less
-		synchronized (LOCK) {
+		synchronized (getLock(fEngine)) {
 			// Set message header for print streams
 			ChannelPrintStream stdout = (ChannelPrintStream) fEngine.getOutputStream();
 			stdout.setParentHeader(message.getHeader());
