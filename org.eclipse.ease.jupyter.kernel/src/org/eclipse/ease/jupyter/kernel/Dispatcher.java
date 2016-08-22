@@ -230,9 +230,8 @@ public class Dispatcher implements Runnable {
 	 *            closed.
 	 */
 	protected void closeConncection(SelectionKey selectionKey) {
-		SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 		try {
-			socketChannel.close();
+			selectionKey.channel().close();
 		} catch (IOException e) {
 			// ignore
 		}
@@ -284,6 +283,18 @@ public class Dispatcher implements Runnable {
 				e.printStackTrace();
 				break;
 			}
+		}
+
+		// Close all opened connections
+		for (SelectionKey key : this.fSelector.keys()) {
+			closeConncection(key);
+		}
+
+		// Close selector just to be sure
+		try {
+			fSelector.close();
+		} catch (IOException e) {
+			// ignore and hope for the best
 		}
 
 		// Close all started kernels
