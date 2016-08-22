@@ -27,6 +27,9 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Dispatcher;
@@ -37,6 +40,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
@@ -90,6 +94,11 @@ public class NotebookLaunchEditor extends EditorPart {
 	private File fDispatcherDir;
 
 	/**
+	 * Timeout in millisecond that Jupyter approximately takes to start up.
+	 */
+	private static final int JUPYTER_START_TIMEOUT = 1000;
+
+	/**
 	 * Number of retries for deleting temporary directory.
 	 * <p>
 	 * Jupyter subprocesses take too long to shut down so we need to retry.
@@ -102,6 +111,21 @@ public class NotebookLaunchEditor extends EditorPart {
 	 * Jupyter subprocesses take too long to shut down so we need to retry.
 	 */
 	private static final int DELETION_SLEEP = 500;
+
+	/**
+	 * {@link Browser} widget displaying the notebook.
+	 */
+	private Browser fBrowser;
+
+	/**
+	 * URL the Jupyter notebook is running on.
+	 */
+	private String fNotebookUrl;
+
+	/**
+	 * Lock object for {@link #fNotebookUrl}.
+	 */
+	private final Object fNotebookUrlLock = new Object();
 
 	/*
 	 * (non-Javadoc)
@@ -126,39 +150,132 @@ public class NotebookLaunchEditor extends EditorPart {
 					"File '" + fNotebookFile.getLocation().toString() + "' does not exist."));
 		}
 
-		// Get information about script engine to be used
-		EngineDescription engineDescription = parseFileForEngine(fNotebookFile);
+		// Asynchronously start up Jupyter
+		Job jupyterStartJob = new Job("Starting Jupyter...") {
 
-		if (engineDescription == null) {
-			// Just launch and hope for standard Jupyter file
-			try {
-				fJupyterProcess = startJupyterProcess();
-			} catch (IOException e) {
-				throw new PartInitException(
-						new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e));
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				SubMonitor subMonitor = SubMonitor.convert(monitor);
+
+				subMonitor.setTaskName("Checking if EASE kernel should be used...");
+				EngineDescription engineDescription = parseFileForEngine(fNotebookFile);
+				if (engineDescription == null) {
+					// Just launch and hope for standard Jupyter file
+					try {
+						// Check if user cancelled.
+						if (subMonitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						subMonitor.setTaskName("Starting Jupyter process...");
+						fJupyterProcess = startJupyterProcess();
+					} catch (IOException e) {
+						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e);
+					}
+				} else {
+					// Otherwise start up custom kernel
+					if (subMonitor.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+
+					// Create dispatcher directory from skeleton
+					try {
+
+						subMonitor.setTaskName("Initializing temporary kernel directory...");
+						initKernelDir(engineDescription);
+					} catch (IOException | URISyntaxException e) {
+						return new Status(Status.ERROR, Activator.PLUGIN_ID,
+								"Could not create temporary Jupyter kernel directory for EASE kernel.", e);
+					}
+
+					// Launch Jupyter process
+					try {
+						// Check if user cancelled.
+						if (subMonitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						subMonitor.setTaskName("Starting Jupyter process...");
+						fJupyterProcess = startJupyterProcess();
+					} catch (IOException e) {
+						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e);
+					}
+
+					if (subMonitor.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+
+					// Create dispatcher for receiving connections to kernel
+					startDispatcherThread(engineDescription);
+				}
+
+				if (subMonitor.isCanceled()) {
+					return Status.CANCEL_STATUS;
+				}
+
+				// Wait for Jupyter to come up
+				try {
+					Thread.sleep(JUPYTER_START_TIMEOUT);
+				} catch (InterruptedException e) {
+					return Status.CANCEL_STATUS;
+				}
+				return Status.OK_STATUS;
 			}
-		} else {
-			// Otherwise start up custom kernel
 
-			// Create dispatcher directory from skeleton
-			try {
-				initKernelDir(engineDescription);
-			} catch (IOException | URISyntaxException e) {
-				throw new PartInitException(new Status(Status.ERROR, Activator.PLUGIN_ID,
-						"Could not create temporary Jupyter kernel directory for EASE kernel.", e));
+		};
+
+		// Set to user job so it can be cancelled from UI
+		jupyterStartJob.setUser(true);
+
+		// Add listener to set URL if successful
+		jupyterStartJob.addJobChangeListener(new IJobChangeListener() {
+			@Override
+			public void sleeping(IJobChangeEvent event) {
 			}
 
-			// Launch Jupyter process
-			try {
-				fJupyterProcess = startJupyterProcess();
-			} catch (IOException e) {
-				throw new PartInitException(
-						new Status(Status.ERROR, Activator.PLUGIN_ID, "Could not start Jupyter process.", e));
+			@Override
+			public void scheduled(IJobChangeEvent event) {
 			}
 
-			// Create dispatcher for receiving connections to kernel
-			startDispatcherThread(engineDescription);
-		}
+			@Override
+			public void running(IJobChangeEvent event) {
+			}
+
+			@Override
+			public void done(IJobChangeEvent event) {
+				// Check if successful result
+				if (event.getResult().isOK()) {
+
+					// Lock because of race condition with #createParentControl
+					synchronized (fNotebookUrlLock) {
+						if (fBrowser != null) {
+							// If browser has been initialized set its URL
+							Display.getDefault().asyncExec(new Runnable() {
+
+								@Override
+								public void run() {
+									fBrowser.setUrl(getJupyterUrl());
+								}
+							});
+						} else {
+							// Otherwise cache it for use in
+							// #createParentControl
+							fNotebookUrl = getJupyterUrl();
+						}
+					}
+				} else if (event.getResult().getCode() == Status.CANCEL) {
+					// Dispose if user cancelled
+					dispose();
+				}
+			}
+
+			@Override
+			public void awake(IJobChangeEvent event) {
+			}
+
+			@Override
+			public void aboutToRun(IJobChangeEvent event) {
+			}
+		});
+		jupyterStartJob.schedule();
 	}
 
 	/*
@@ -173,18 +290,15 @@ public class NotebookLaunchEditor extends EditorPart {
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 
-		// Actually create browser
-		Browser browser = new Browser(parent, SWT.None);
+		// Open Jupyter URL if already available
+		synchronized (fNotebookUrlLock) {
+			// Actually create browser
+			fBrowser = new Browser(parent, SWT.None);
 
-		// FIXME: Jupyter takes too long to start
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// ignore
+			if (fNotebookUrl != null) {
+				fBrowser.setUrl(fNotebookUrl);
+			}
 		}
-
-		// Open Jupyter URL
-		browser.setUrl(getJupyterUrl());
 	}
 
 	/*
