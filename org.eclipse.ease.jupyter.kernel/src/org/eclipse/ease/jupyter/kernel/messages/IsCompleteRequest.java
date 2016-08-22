@@ -17,10 +17,12 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -44,6 +46,15 @@ public class IsCompleteRequest extends Content {
 	private String code;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public IsCompleteRequest() {
+
+	}
+
+	@JsonCreator
+	public IsCompleteRequest(@JsonProperty(value = "code", required = true) final String code) {
+		this.code = code;
+	}
 
 	/**
 	 * 
@@ -110,6 +121,18 @@ public class IsCompleteRequest extends Content {
 		IsCompleteRequest rhs = ((IsCompleteRequest) other);
 		return new EqualsBuilder().appendSuper(super.equals(other)).append(code, rhs.code)
 				.append(additionalProperties, rhs.additionalProperties).isEquals();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.ease.jupyter.kernel.messages.Content#validate()
+	 */
+	@Override
+	public void validate() throws JsonMappingException {
+		if (this.code == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

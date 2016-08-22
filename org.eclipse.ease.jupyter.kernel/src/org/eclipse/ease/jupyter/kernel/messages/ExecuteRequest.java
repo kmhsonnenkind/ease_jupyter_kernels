@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -52,6 +54,36 @@ public class ExecuteRequest extends Content {
 	private Boolean stopOnError;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public ExecuteRequest(@JsonProperty(value = "code", required = true) final String code,
+			@JsonProperty(value = "silent", required = false) final Boolean silent,
+			@JsonProperty(value = "store_history", required = false) final Boolean storeHistory,
+			@JsonProperty(value = "user_expressions", required = false) final UserExpressions userExpressions,
+			@JsonProperty(value = "allow_stdin", required = false) final Boolean allowStdin,
+			@JsonProperty(value = "stop_on_error", required = false) final Boolean stopOnError) {
+		this.code = code;
+		if (silent != null) {
+			this.silent = silent;
+		} else {
+			this.silent = false;
+		}
+		if (storeHistory != null && !this.silent) {
+			this.storeHistory = storeHistory;
+		} else {
+			this.storeHistory = !this.silent;
+		}
+		this.userExpressions = userExpressions;
+		if (allowStdin != null) {
+			this.allowStdin = allowStdin;
+		} else {
+			this.allowStdin = true;
+		}
+		if (stopOnError != null) {
+			this.stopOnError = stopOnError;
+		} else {
+			this.stopOnError = false;
+		}
+	}
 
 	/**
 	 * 
@@ -241,6 +273,18 @@ public class ExecuteRequest extends Content {
 				.append(storeHistory, rhs.storeHistory).append(userExpressions, rhs.userExpressions)
 				.append(allowStdin, rhs.allowStdin).append(stopOnError, rhs.stopOnError)
 				.append(additionalProperties, rhs.additionalProperties).isEquals();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.ease.jupyter.kernel.messages.Content#validate()
+	 */
+	@Override
+	public void validate() throws JsonMappingException {
+		if (this.code == null) {
+			throw new JsonMappingException("Missing parameters.");
+		}
 	}
 
 }

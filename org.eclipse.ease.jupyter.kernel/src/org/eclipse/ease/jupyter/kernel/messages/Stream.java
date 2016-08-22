@@ -19,10 +19,12 @@ import javax.annotation.Generated;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -44,6 +46,17 @@ public class Stream extends Content {
 	private String text;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public Stream() {
+
+	}
+
+	@JsonCreator
+	public Stream(@JsonProperty(value = "name", required = true) final String name,
+			@JsonProperty(value = "text", required = true) final String text) {
+		this.name = name;
+		this.text = text;
+	}
 
 	/**
 	 * 
@@ -115,8 +128,8 @@ public class Stream extends Content {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().appendSuper(super.hashCode()).append(name)
-				.append(text).append(additionalProperties).toHashCode();
+		return new HashCodeBuilder().appendSuper(super.hashCode()).append(name).append(text)
+				.append(additionalProperties).toHashCode();
 	}
 
 	@Override
@@ -128,10 +141,20 @@ public class Stream extends Content {
 			return false;
 		}
 		Stream rhs = ((Stream) other);
-		return new EqualsBuilder().appendSuper(super.equals(other))
-				.append(name, rhs.name).append(text, rhs.text)
-				.append(additionalProperties, rhs.additionalProperties)
-				.isEquals();
+		return new EqualsBuilder().appendSuper(super.equals(other)).append(name, rhs.name).append(text, rhs.text)
+				.append(additionalProperties, rhs.additionalProperties).isEquals();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.ease.jupyter.kernel.messages.Content#validate()
+	 */
+	@Override
+	public void validate() throws JsonMappingException {
+		if (this.name == null || this.text == null) {
+			throw new JsonMappingException("Missing parameter");
+		}
 	}
 
 }

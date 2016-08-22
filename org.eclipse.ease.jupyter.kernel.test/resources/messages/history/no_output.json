@@ -1,0 +1,10 @@
+{
+    "raw": false,
+    "hist_access_type": "range",
+    "session": 1,
+    "start": 2,
+    "stop": 3,
+    "n": 4,
+    "pattern": "pattern",
+    "unique": false
+}

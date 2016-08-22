@@ -285,7 +285,14 @@ public class HistoryMessageHandler implements IMessageHandler {
 	@Override
 	public void handle(Message message) {
 		// Parse request to more usable format
-		HistoryRequest request = JSON_OBJECT_MAPPER.convertValue(message.getContent(), HistoryRequest.class);
+		HistoryRequest request;
+		try {
+			request = JSON_OBJECT_MAPPER.convertValue(message.getContent(), HistoryRequest.class);
+			request.validate();
+		} catch (IOException | IllegalArgumentException e) {
+			e.printStackTrace();
+			return;
+		}
 
 		// Create reply
 		Message reply = message.createReply();

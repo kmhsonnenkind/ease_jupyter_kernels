@@ -288,7 +288,14 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	@Override
 	public void handle(Message message) {
 		// Parse request to more easily usable format.
-		ExecuteRequest request = JSON_OBJECT_MAPPER.convertValue(message.getContent(), ExecuteRequest.class);
+		ExecuteRequest request;
+		try {
+			request = JSON_OBJECT_MAPPER.convertValue(message.getContent(), ExecuteRequest.class);
+			request.validate();
+		} catch (IOException | IllegalArgumentException e) {
+			e.printStackTrace();
+			return;
+		}
 		String code = request.getCode();
 
 		synchronized (getLock(fEngine)) {

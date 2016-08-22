@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -62,6 +63,41 @@ public class HistoryRequest extends Content {
 	private Boolean unique;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	@JsonCreator
+	public HistoryRequest(@JsonProperty(value = "output", required = true) final Boolean output,
+			@JsonProperty(value = "raw", required = true) final Boolean raw,
+			@JsonProperty(value = "hist_access_type", required = true) final HistAccessType histAccessType,
+			@JsonProperty(value = "session", required = false) final Integer session,
+			@JsonProperty(value = "start", required = false) final Integer start,
+			@JsonProperty(value = "stop", required = false) final Integer stop,
+			@JsonProperty(value = "n", required = false) final Integer n,
+			@JsonProperty(value = "pattern", required = false) final String pattern,
+			@JsonProperty(value = "unique", required = false) final Boolean unique) {
+		this.output = output;
+		this.raw = raw;
+		this.histAccessType = histAccessType;
+		if (session != null) {
+			this.session = session;
+		}
+		if (start != null) {
+			this.start = start;
+		}
+		if (stop != null) {
+			this.stop = stop;
+		}
+		if (n != null) {
+			this.n = n;
+		}
+		if (pattern != null) {
+			this.pattern = pattern;
+		}
+		if (unique != null) {
+			this.unique = unique;
+		} else {
+			this.unique = false;
+		}
+	}
 
 	/**
 	 * 
@@ -357,6 +393,18 @@ public class HistoryRequest extends Content {
 			}
 		}
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.ease.jupyter.kernel.messages.Content#validate()
+	 */
+	@Override
+	public void validate() throws JsonMappingException {
+		if (this.output == null || this.raw == null || this.histAccessType == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

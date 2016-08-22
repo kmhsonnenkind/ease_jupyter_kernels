@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -39,6 +41,16 @@ public class Status extends Content {
 	private Status.ExecutionState executionState;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+	public Status() {
+
+	}
+
+	@JsonCreator
+	public Status(
+			@JsonProperty(value = "execution_state", required = true) final Status.ExecutionState executionState) {
+		this.executionState = executionState;
+	}
 
 	/**
 	 * 
@@ -134,7 +146,18 @@ public class Status extends Content {
 				return constant;
 			}
 		}
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.ease.jupyter.kernel.messages.Content#validate()
+	 */
+	@Override
+	public void validate() throws JsonMappingException {
+		if (this.executionState == null) {
+			throw new JsonMappingException("Missing parameter.");
+		}
 	}
 
 }

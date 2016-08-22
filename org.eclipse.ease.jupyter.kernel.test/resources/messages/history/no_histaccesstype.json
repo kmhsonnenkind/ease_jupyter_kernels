@@ -1,0 +1,10 @@
+{
+    "output": true,
+    "raw": false,
+    "session": 1,
+    "start": 2,
+    "stop": 3,
+    "n": 4,
+    "pattern": "pattern",
+    "unique": false
+}

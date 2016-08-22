@@ -11,6 +11,8 @@
 
 package org.eclipse.ease.jupyter.kernel;
 
+import org.eclipse.ease.jupyter.kernel.test.messages.ExecuteRequestTest;
+import org.eclipse.ease.jupyter.kernel.test.messages.HistoryRequestTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -19,7 +21,7 @@ import org.junit.runners.Suite.SuiteClasses;
  * Main test suite for all EASE Jupyter Kernel tests.
  */
 @RunWith(Suite.class)
-@SuiteClasses({ DispatcherTest.class, ProtocolTest.class })
+@SuiteClasses({ DispatcherTest.class, ProtocolTest.class, ExecuteRequestTest.class, HistoryRequestTest.class })
 public class EaseJupyterKernelTests {
 
 }

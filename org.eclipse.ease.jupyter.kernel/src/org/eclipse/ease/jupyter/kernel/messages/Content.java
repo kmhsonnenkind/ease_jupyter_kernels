@@ -18,6 +18,8 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -28,7 +30,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Automatically generated from JSON schema using jsonschema2pojo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Content {
+public abstract class Content {
 
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
@@ -67,8 +69,18 @@ public class Content {
 			return false;
 		}
 		Content rhs = ((Content) other);
-		return new EqualsBuilder().append(additionalProperties,
-				rhs.additionalProperties).isEquals();
+		return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
 	}
+
+	/**
+	 * Checks that all required values are set.
+	 * <p>
+	 * TODO: Jackson library from orbit currently does not support parameter
+	 * validation during de-serialization therefore this method was added.
+	 * 
+	 * @throws JsonMappingException
+	 *             If required parameter missing.
+	 */
+	abstract void validate() throws JsonMappingException;
 
 }
