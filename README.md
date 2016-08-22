@@ -1,5 +1,12 @@
 # Jupyter Kernels for Eclipse EASE script engines
 
+## About
+
+This project allows users to have [EASE](http://www.eclipse.org/ease/) script engines as [Jupyter](http://jupyter.org) kernels.
+
+It is mainly intended to be used by the Jupyter notebook but theoretically the kernels work for any Jupyter clients.
+
+
 ## Prerequisites / Installation:
 
 In order to use the **EASE Jupyter Kernels**, you will need to have the following three components installed:
@@ -65,6 +72,17 @@ On the next page you can select the EASE script engine you want to use for this 
 Once you have created the notebook file you can start it by simply double-clicking it. This will open a browser showing you the notebook. From here on you can use it as you would any other Jupyter notebook.
 
 **Note:** As the **EASE Jupyter Kernels** need the EASE script engines it is (currently) only possible to use them directly from Eclipse.
+
+
+## Bugs:
+
+The easiest way to report bugs is to use the official Eclipse [bug-tracker](https://bugs.eclipse.org/bugs/describecomponents.cgi?product=Ease).
+
+The project is currently not hosted on Eclipse as the external requirements do not match the necessary criteria.
+Nevertheless the bug-tracker can be used.
+
+Otherwise you can contact me by [mail](maito://martin.kloesch@gmail.com).
+
 
 
 ## Developers:
