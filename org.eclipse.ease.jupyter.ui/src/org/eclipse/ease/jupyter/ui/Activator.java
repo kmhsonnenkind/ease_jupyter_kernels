@@ -11,6 +11,10 @@
 
 package org.eclipse.ease.jupyter.ui;
 
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -25,6 +29,17 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 
+	/**
+	 * {@link Queue} of started {@link Job} objects that need to be finished
+	 * before Eclipse shuts down.
+	 */
+	private Queue<Job> fJobs = new LinkedBlockingQueue<Job>();
+
+	/**
+	 * Simple lock object as we cannot make #fJobs final.
+	 */
+	private final Object fJobsLock = new Object();
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -36,6 +51,27 @@ public class Activator extends AbstractUIPlugin {
 		plugin = this;
 	}
 
+	/**
+	 * Schedules a job that needs to be finished. Adds it to the internal list
+	 * of jobs and actually schedules it.
+	 * <p>
+	 * Jobs will be canceled and joined during shutdown, so handle with care.
+	 * <p>
+	 * Jobs are not guaranteed to be run, if they are scheduled after
+	 * {@link #stop(BundleContext)} was already called.
+	 * 
+	 * @param job
+	 *            Job that needs to be scheduled and finished.
+	 */
+	public void schedule(Job job) {
+		synchronized (this.fJobsLock) {
+			if (this.fJobs != null) {
+				fJobs.add(job);
+				job.schedule();
+			}
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -43,6 +79,20 @@ public class Activator extends AbstractUIPlugin {
 	 * BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
+		synchronized (this.fJobsLock) {
+			Job job = null;
+			while ((job = this.fJobs.poll()) != null) {
+				job.cancel();
+				try {
+					job.join();
+				} catch (InterruptedException e) {
+					// Really not much more we can do
+					e.printStackTrace();
+				}
+			}
+			this.fJobs = null;
+		}
+
 		plugin = null;
 		super.stop(context);
 	}

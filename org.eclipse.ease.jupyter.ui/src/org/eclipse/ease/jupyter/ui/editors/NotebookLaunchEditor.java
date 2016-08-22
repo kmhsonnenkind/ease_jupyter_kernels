@@ -25,7 +25,9 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Dispatcher;
 import org.eclipse.ease.jupyter.ui.Activator;
@@ -240,58 +242,67 @@ public class NotebookLaunchEditor extends EditorPart {
 	 */
 	@Override
 	public void dispose() {
-		// FIXME: Rather do this asynchronously, but problem with shutdown
+		Job cleanupJob = new Job("Shutting down Jupyter...") {
 
-		// Shut down process
-		if (fJupyterProcess != null && fJupyterProcess.isAlive()) {
-			fJupyterProcess.destroy();
-			try {
-				fJupyterProcess.waitFor();
-			} catch (InterruptedException e) {
-				// Hope that process shut down
-			}
-		}
-
-		// Close the dispatcher
-		if (fDispatcher != null) {
-			fDispatcher.stop();
-			if (fDispatcherThread != null) {
-				try {
-					fDispatcherThread.join();
-				} catch (InterruptedException e) {
-					// ignore
-				}
-			}
-		}
-
-		// Delete temporary files
-		if (fDispatcherDir != null && fDispatcherDir.exists()) {
-
-			// Try a couple of time because process might still lock
-			// directory
-			for (int i = 0; i < DELETION_RETRIES; i++) {
-				try {
-					FileUtils.deleteDirectory(fDispatcherDir);
-					break;
-				} catch (IOException e) {
-					// Sleep a bit and then retry
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				// Shut down process
+				if (fJupyterProcess != null && fJupyterProcess.isAlive()) {
+					fJupyterProcess.destroy();
 					try {
-						Thread.sleep(DELETION_SLEEP);
-					} catch (InterruptedException e2) {
-						// Ignore
+						fJupyterProcess.waitFor();
+					} catch (InterruptedException e) {
+						// Hope that process shut down
 					}
 				}
-			}
-		}
 
-		// Refresh file just to be sure
-		if (fNotebookFile != null && fNotebookFile.exists()) {
-			try {
-				fNotebookFile.refreshLocal(0, null);
-			} catch (CoreException e) {
-				// Ignore and ask user to refresh later
+				// Close the dispatcher
+				if (fDispatcher != null) {
+					fDispatcher.stop();
+					if (fDispatcherThread != null) {
+						try {
+							fDispatcherThread.join();
+						} catch (InterruptedException e) {
+							// ignore
+						}
+					}
+				}
+
+				// Delete temporary files
+				if (fDispatcherDir != null && fDispatcherDir.exists()) {
+
+					// Try a couple of time because process might still lock
+					// directory
+					for (int i = 0; i < DELETION_RETRIES; i++) {
+						try {
+							FileUtils.deleteDirectory(fDispatcherDir);
+							break;
+						} catch (IOException e) {
+							// Sleep a bit and then retry
+							try {
+								Thread.sleep(DELETION_SLEEP);
+							} catch (InterruptedException e2) {
+								// Ignore
+							}
+						}
+					}
+				}
+
+				// Refresh file just to be sure
+				if (fNotebookFile != null && fNotebookFile.exists()) {
+					try {
+						fNotebookFile.refreshLocal(0, null);
+					} catch (CoreException e) {
+						// Ignore and ask user to refresh later
+					}
+				}
+				return Status.OK_STATUS;
 			}
-		}
+
+		};
+
+		// Schedule Job using plugin to assure it completes
+		Activator.getDefault().schedule(cleanupJob);
 	}
 
 	/**
