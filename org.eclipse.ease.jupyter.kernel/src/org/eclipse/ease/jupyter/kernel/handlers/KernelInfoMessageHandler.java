@@ -101,8 +101,8 @@ public class KernelInfoMessageHandler implements IMessageHandler {
 		// FIXME: Query kernel rather than hardcoding data
 		KernelInfoReply content = new KernelInfoReply().withProtocolVersion("5.0").withImplementation("ease")
 				.withImplementationVersion("0.0.1").withBanner("EASE Test Kernel")
-				.withLanguageInfo(new LanguageInfo().withMimetype("text/javascript").withFileExtension(".js")
-						.withName("javascript").withVersion("0.0.0"));
+				.withLanguageInfo(new LanguageInfo().withMimetype("text/x-python3").withFileExtension(".py")
+						.withName("python").withVersion("0.0.0").withPygmentsLexer("py3").withNbconvertExporter("python"));
 
 		reply.withContent(content);
 		try {

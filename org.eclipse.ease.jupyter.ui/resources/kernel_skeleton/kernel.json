@@ -1,5 +1,5 @@
 {
 	"argv": ["java", "-jar", "@@launcher@@", "{connection_file}", "localhost", "@@dispatcherport@@"],
 	"display_name": "EASE (@@enginename@@)",
-	"language": "javascript"
+	"language": "@@language@@"
 }

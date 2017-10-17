@@ -275,7 +275,7 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	 *            {@link IScriptEngine} to get lock for.
 	 * @return Lock object for given {@link IScriptEngine}.
 	 */
-	private static synchronized Object getLock(IScriptEngine engine) {
+	public static synchronized Object getLock(IScriptEngine engine) {
 		if (!LOCKS.containsKey(engine)) {
 			LOCKS.put(engine, new Object());
 		}

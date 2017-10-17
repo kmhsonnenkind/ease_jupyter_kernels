@@ -1,5 +1,5 @@
 {
 	"argv": ["java", "-jar", "@BUILDDIR@/org.eclipse.ease.jupyter.kernel.launcher.jar", "{connection_file}", "localhost", "54321"],
 	"display_name": "EASE",
-	"language": "javascript"
+	"language": "python"
 }

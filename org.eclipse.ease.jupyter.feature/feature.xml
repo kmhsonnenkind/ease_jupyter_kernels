@@ -2,7 +2,7 @@
 <feature
       id="org.eclipse.ease.jupyter.feature"
       label="EASE Jupyter feature"
-      version="0.0.1.qualifier"
+      version="0.0.2.qualifier"
       provider-name="Eclipse.org">
 
    <description>
@@ -99,13 +99,6 @@ This Agreement is governed by the laws of the State of New York and the intellec
 
    <plugin
          id="org.eclipse.ease.jupyter.kernel"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.ease.jupyter.kernel.module"
          download-size="0"
          install-size="0"
          version="0.0.0"

@@ -30,7 +30,7 @@ public class Kernel {
 	/**
 	 * {@link IScriptEngine} to execute code on.
 	 */
-	protected final IScriptEngine fEngine;
+	public final IScriptEngine fEngine;
 
 	/**
 	 * Session used by kernel.

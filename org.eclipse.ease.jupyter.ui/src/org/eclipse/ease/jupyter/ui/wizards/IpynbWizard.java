@@ -85,7 +85,7 @@ public class IpynbWizard extends Wizard implements INewWizard {
 		// Check if skeleton needs to be populated
 		if (file != null && !fEnginePage.createStandardNotebook()) {
 			// Read skeleton content
-			String skeleton = ResourceTools.resourceToString(file);
+			String skeleton = ResourceTools.toString(file);
 			if (skeleton == null) {
 				return false;
 			}

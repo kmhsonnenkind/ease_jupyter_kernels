@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.eclipse.ease.jupyter.feature_0.0.1.qualifier.jar" id="org.eclipse.ease.jupyter.feature" version="0.0.1.qualifier">
+   <feature url="features/org.eclipse.ease.jupyter.feature_0.0.2.qualifier.jar" id="org.eclipse.ease.jupyter.feature" version="0.0.2.qualifier">
       <category name="org.eclipse.ease.jupyter.category"/>
    </feature>
    <category-def name="org.eclipse.ease.jupyter.category" label="EASE Jupyter Integation">

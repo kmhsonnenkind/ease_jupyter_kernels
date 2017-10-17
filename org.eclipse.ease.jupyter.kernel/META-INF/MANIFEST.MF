@@ -2,17 +2,21 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: EASE Jupyter Kernels
 Bundle-SymbolicName: org.eclipse.ease.jupyter.kernel;singleton:=true
-Bundle-Version: 0.0.1.qualifier
+Bundle-Version: 0.0.2.qualifier
 Bundle-Vendor: Eclipse.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.ease,
+ org.eclipse.ease.ui,
  com.fasterxml.jackson.core.jackson-annotations,
  com.fasterxml.jackson.core.jackson-core,
  com.fasterxml.jackson.core.jackson-databind,
  org.json,
- org.apache.commons.lang3
-Export-Package: org.eclipse.ease.jupyter.kernel
+ org.apache.commons.lang3,
+ org.eclipse.jface.text,
+ org.eclipse.jface
+Export-Package: org.eclipse.ease.jupyter.kernel,
+ org.eclipse.ease.jupyter.kernel.handlers
 Bundle-ClassPath: .,
  lib/commons-codec/commons-codec/1.10/commons-codec-1.10.jar,
  lib/org/zeromq/jeromq/0.3.5/jeromq-0.3.5.jar

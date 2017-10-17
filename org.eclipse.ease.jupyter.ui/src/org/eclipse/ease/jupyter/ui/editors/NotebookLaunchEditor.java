@@ -26,16 +26,20 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.variables.IStringVariableManager;
+import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Dispatcher;
 import org.eclipse.ease.jupyter.ui.Activator;
 import org.eclipse.ease.service.EngineDescription;
 import org.eclipse.ease.service.IScriptService;
+import org.eclipse.ease.service.ScriptType;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.layout.FillLayout;
@@ -96,7 +100,7 @@ public class NotebookLaunchEditor extends EditorPart {
 	/**
 	 * Timeout in millisecond that Jupyter approximately takes to start up.
 	 */
-	private static final int JUPYTER_START_TIMEOUT = 1000;
+	private static final int JUPYTER_START_TIMEOUT = 7000;
 
 	/**
 	 * Number of retries for deleting temporary directory.
@@ -362,6 +366,7 @@ public class NotebookLaunchEditor extends EditorPart {
 			protected IStatus run(IProgressMonitor monitor) {
 				// Shut down process
 				if (fJupyterProcess != null && fJupyterProcess.isAlive()) {
+					// FIXME: Cannot kill process tree in Windows
 					fJupyterProcess.destroy();
 					try {
 						fJupyterProcess.waitFor();
@@ -457,8 +462,8 @@ public class NotebookLaunchEditor extends EditorPart {
 	 * {@link EngineDescription}.
 	 * 
 	 * @param engineDescription
-	 *            Description of {@link IScriptEngine} to be used by EASE
-	 *            Jupyter kernel.
+	 *            Description of {@link IScriptEngine} to be used by EASE Jupyter
+	 *            kernel.
 	 * @throws IOException
 	 *             If EASE kernel could not be created.
 	 * @throws URISyntaxException
@@ -497,15 +502,15 @@ public class NotebookLaunchEditor extends EditorPart {
 		fDispatcherPort = getFreePort(50000);
 		File kernelFile = new File(kernelDir, "kernel.json");
 		File launcherFile = new File(kernelDir, "org.eclipse.ease.jupyter.kernel.launcher.jar");
-		populateKernelTempatefile(kernelFile, launcherFile, fDispatcherPort, engineDescription.getName());
+		populateKernelTempatefile(kernelFile, launcherFile, fDispatcherPort, engineDescription);
 	}
 
 	/**
 	 * Tries to find a new free port close to the given start port.
 	 * <p>
-	 * Not that there is a (unlikely but) possible race condition if the
-	 * returned port is being used between calling this and actually starting a
-	 * server. Handle blocked servers appropriately.
+	 * Not that there is a (unlikely but) possible race condition if the returned
+	 * port is being used between calling this and actually starting a server.
+	 * Handle blocked servers appropriately.
 	 * 
 	 * @param startPort
 	 *            Lowest desired port number.
@@ -544,8 +549,8 @@ public class NotebookLaunchEditor extends EditorPart {
 	 * @param templateFile
 	 *            the "kernel.json" template file to be patched.
 	 * @param launcherFile
-	 *            "org.eclipse.ease.jupyter.kernel.launcher.jar" file to be
-	 *            used. Must be accessible by forked processes.
+	 *            "org.eclipse.ease.jupyter.kernel.launcher.jar" file to be used.
+	 *            Must be accessible by forked processes.
 	 * 
 	 * @param dispatcherPort
 	 *            Port the {@link Dispatcher} is listening on.
@@ -554,16 +559,22 @@ public class NotebookLaunchEditor extends EditorPart {
 	 * @throws IOException
 	 */
 	private static void populateKernelTempatefile(final File templateFile, final File launcherFile, int dispatcherPort,
-			final String engineName) throws IOException {
+			EngineDescription engine) throws IOException {
 		// Get template file contents
 		String skeletonContent = FileUtils.readFileToString(templateFile);
+
+		String language = "python";
+		ScriptType type = engine.getSupportedScriptTypes().get(0);
+		if (type != null) {
+			language = type.getName();
+		}
 
 		// Patch contents
 		// FIXME: problem when kernel.json file contains single backslashes
 		// under windows
 		String patched = skeletonContent.replace("@@launcher@@", launcherFile.getCanonicalPath().replace('\\', '/'))
 				.replaceAll("@@dispatcherport@@", Integer.toString(dispatcherPort))
-				.replace("@@enginename@@", engineName);
+				.replace("@@enginename@@", engine.getName()).replace("@@language@@", language);
 
 		// Write back patched value
 		FileUtils.writeStringToFile(templateFile, patched);
@@ -581,11 +592,19 @@ public class NotebookLaunchEditor extends EditorPart {
 		fJupyterPort = getFreePort(8888);
 
 		// Create process
+		// XXX: Use hardcoded string to avoid dependency to py4j plugin
+		String interpreter = Platform.getPreferencesService().getString("org.eclipse.ease.lang.python.py4j", "org.eclipse.ease.lang.python.py4j.INTERPRETER", "python", null);
+		final IStringVariableManager variableManager = VariablesPlugin.getDefault().getStringVariableManager();
+		try {
+			interpreter = variableManager.performStringSubstitution(interpreter);
+		} catch (CoreException e) {
+			interpreter = "python";
+		}
+
 		String workspaceDir = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-		ProcessBuilder processBuilder = new ProcessBuilder("jupyter-notebook", "--no-browser", "--port=" + fJupyterPort,
+		ProcessBuilder processBuilder = new ProcessBuilder(interpreter, "-m", "notebook", "--no-browser", "--port=" + fJupyterPort,
 				"--notebook-dir=" + workspaceDir);
 		processBuilder.directory(new File(workspaceDir));
-		processBuilder.inheritIO();
 
 		// Patch environment variables for Jupyter to find kernels
 		if (fDispatcherDir != null) {
@@ -598,11 +617,11 @@ public class NotebookLaunchEditor extends EditorPart {
 	}
 
 	/**
-	 * Starts a new {@link Dispatcher} with a new {@link IScriptEngine} based on
-	 * the given {@link EngineDescription}.
+	 * Starts a new {@link Dispatcher} with a new {@link IScriptEngine} based on the
+	 * given {@link EngineDescription}.
 	 * <p>
-	 * Port for dispatcher is based on value of {@link #fDispatcherPort} and
-	 * host always defaults to "localhost".
+	 * Port for dispatcher is based on value of {@link #fDispatcherPort} and host
+	 * always defaults to "localhost".
 	 * <p>
 	 * {@link Dispatcher} is being run in on {@link Thread} (stored in
 	 * {@link #fDispatcherThread}.
