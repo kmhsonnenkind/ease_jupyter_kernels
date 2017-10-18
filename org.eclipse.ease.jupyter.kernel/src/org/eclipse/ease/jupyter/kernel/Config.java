@@ -66,7 +66,7 @@ public class Config {
 			@JsonProperty(value = "hb_port", required = true) Integer hbPort,
 			@JsonProperty(value = "shell_port", required = true) Integer shellPort,
 			@JsonProperty(value = "iopub_port", required = true) Integer iopubPort,
-			@JsonProperty(value = "stdinPort", required = true) Integer stdinPort,
+			@JsonProperty(value = "stdinPort", required = false) Integer stdinPort,
 			@JsonProperty(value = "additionalProperties", required = false) Map<String, Object> additionalProperties) {
 		this.ip = ip;
 		this.transport = transport;
@@ -95,8 +95,7 @@ public class Config {
 	public void validate() throws JsonMappingException {
 		// Check that all required values are not null
 		if (this.ip == null || this.transport == null || this.key == null || this.signatureScheme == null
-				|| this.controlPort == null || this.hbPort == null || this.shellPort == null || this.iopubPort == null
-				|| this.stdinPort == null) {
+				|| this.controlPort == null || this.hbPort == null || this.shellPort == null || this.iopubPort == null) {
 			throw new JsonMappingException("Missing parameter.");
 		}
 	}
