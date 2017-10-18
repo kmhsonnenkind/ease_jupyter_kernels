@@ -1,0 +1,58 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Martin Kloesch and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Martin Kloesch - initial API and implementation
+ *******************************************************************************/
+target "Oxygen" with source requirements
+
+
+location "http://download.eclipse.org/releases/oxygen/" eclipse-oxygen {
+	org.eclipse.platform.feature.group
+	org.eclipse.rcp.feature.group
+	org.eclipse.jdt.feature.group
+	org.eclipse.equinox.p2.discovery.feature.feature.group
+
+	// javascript support (rhino & editors)
+	org.eclipse.wst.jsdt.feature.feature.group
+
+	// for modeling stuff
+	org.eclipse.emf.feature.group
+
+	// java module
+	org.eclipse.pde.feature.group
+	org.eclipse.jdt
+}
+
+location "https://bintray.com/artifact/download/pontesegger/ease-engines/" ease-engines {
+	// jython interpreter
+	org.eclipse.ease.engine.jython.feature.feature.group lazy
+	// groovy interpreter
+	org.eclipse.ease.engine.groovy.feature.feature.group lazy
+	// ruby interpreter
+	org.eclipse.ease.engine.jruby.feature.feature.group lazy
+}
+
+location "https://dl.bintray.com/py4j/py4j-eclipse/0.10.4/" py4j-eclipse {
+	org.py4j.feature.feature.group [0.10.4,0.10.5)
+}
+
+location "http://download.eclipse.org/tools/orbit/R-builds/R20170516192513/repository/" eclipse-orbit-oxygen {
+	org.mockito [1.9.5,2.0.0)
+	org.hamcrest [1.1.0,2.0.0)
+	org.json
+	com.fasterxml.jackson.core.jackson-annotations
+	com.fasterxml.jackson.core.jackson-core
+	com.fasterxml.jackson.core.jackson-databind
+	org.apache.commons.lang3
+	org.apache.commons.io
+}
+
+location "http://download.eclipse.org/ease/update/nightly" eclipse-ease {
+	org.eclipse.ease.feature.feature.group
+	org.eclipse.ease.ui.feature.feature.group
+}

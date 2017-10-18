@@ -1,36 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="Neon" sequenceNumber="1471541975">
-<locations>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.platform.feature.group" version="4.6.0.v20160606-1342"/>
-<unit id="org.eclipse.rcp.feature.group" version="4.6.0.v20160606-1342"/>
-<unit id="org.eclipse.jdt.feature.group" version="3.12.0.v20160606-1100"/>
-<unit id="org.eclipse.equinox.p2.discovery.feature.feature.group" version="1.0.400.v20160504-1450"/>
-<unit id="org.eclipse.wst.jsdt.feature.feature.group" version="2.0.0.v201605311817"/>
-<unit id="org.eclipse.emf.feature.group" version="2.12.0.v20160526-0356"/>
-<unit id="org.eclipse.pde.feature.group" version="3.12.0.v20160606-1100"/>
-<unit id="org.eclipse.jdt" version="3.12.0.v20160606-1100"/>
-<repository location="http://download.eclipse.org/releases/neon/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.ease.engine.jython.feature.feature.group" version="2.7.0.I201604140914"/>
-<repository location="https://bintray.com/artifact/download/pontesegger/ease-engines/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.ease.feature.feature.group" version="0.3.0.I201602290929"/>
-<unit id="org.eclipse.ease.ui.feature.feature.group" version="0.3.0.I201605121005"/>
-<repository location="http://download.eclipse.org/ease/update/release"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.hamcrest" version="1.1.0.v20090501071000"/>
-<unit id="org.json" version="1.0.0.v201011060100"/>
-<unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
-<unit id="com.fasterxml.jackson.core.jackson-databind" version="2.5.0.v201504151636"/>
-<unit id="com.fasterxml.jackson.core.jackson-annotations" version="2.5.0.v201504151636"/>
-<unit id="org.mockito" version="1.9.5.v201605172210"/>
-<unit id="org.apache.commons.io" version="2.2.0.v201405211200"/>
-<unit id="com.fasterxml.jackson.core.jackson-core" version="2.5.0.v201504151636"/>
-<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20160520211859/repository/"/>
-</location>
-</locations>
+<?pde?>
+<!-- generated with https://github.com/mbarbero/fr.obeo.releng.targetplatform -->
+<target name="Oxygen" sequenceNumber="1508326412">
+  <locations>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
+      <unit id="org.eclipse.platform.feature.group" version="4.7.1.v20171009-0410"/>
+      <unit id="org.eclipse.rcp.feature.group" version="4.7.1.v20171009-0410"/>
+      <unit id="org.eclipse.jdt.feature.group" version="3.13.1.v20171009-0410"/>
+      <unit id="org.eclipse.equinox.p2.discovery.feature.feature.group" version="1.1.1.v20170906-1259"/>
+      <unit id="org.eclipse.wst.jsdt.feature.feature.group" version="2.1.0.v201706011953"/>
+      <unit id="org.eclipse.emf.feature.group" version="2.13.0.v20170609-0928"/>
+      <unit id="org.eclipse.pde.feature.group" version="3.13.1.v20171009-0537"/>
+      <unit id="org.eclipse.jdt" version="3.13.1.v20171009-0410"/>
+      <repository id="eclipse-oxygen" location="http://download.eclipse.org/releases/oxygen/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
+      <unit id="org.eclipse.ease.engine.jython.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ease.engine.groovy.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ease.engine.jruby.feature.feature.group" version="0.0.0"/>
+      <repository id="ease-engines" location="https://bintray.com/artifact/download/pontesegger/ease-engines/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
+      <unit id="org.py4j.feature.feature.group" version="0.10.4.bnd-RaMnLA"/>
+      <repository id="py4j-eclipse" location="https://dl.bintray.com/py4j/py4j-eclipse/0.10.4/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
+      <unit id="org.mockito" version="1.9.5.v201605172210"/>
+      <unit id="org.hamcrest" version="1.1.0.v20090501071000"/>
+      <unit id="org.json" version="1.0.0.v201011060100"/>
+      <unit id="com.fasterxml.jackson.core.jackson-annotations" version="2.6.2.v20161117-2150"/>
+      <unit id="com.fasterxml.jackson.core.jackson-core" version="2.6.2.v20161117-2150"/>
+      <unit id="com.fasterxml.jackson.core.jackson-databind" version="2.6.2.v20161117-2150"/>
+      <unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
+      <unit id="org.apache.commons.io" version="2.2.0.v201405211200"/>
+      <repository id="eclipse-orbit-oxygen" location="http://download.eclipse.org/tools/orbit/R-builds/R20170516192513/repository/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
+      <unit id="org.eclipse.ease.feature.feature.group" version="0.6.0.I201710090813"/>
+      <unit id="org.eclipse.ease.ui.feature.feature.group" version="0.6.0.I201710180312"/>
+      <repository id="eclipse-ease" location="http://download.eclipse.org/ease/update/nightly"/>
+    </location>
+  </locations>
 </target>
