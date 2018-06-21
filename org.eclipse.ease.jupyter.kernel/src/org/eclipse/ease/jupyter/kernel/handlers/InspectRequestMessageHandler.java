@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.ease.IScriptEngine;
+import org.eclipse.ease.jupyter.kernel.IEngineProvider;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
 import org.eclipse.ease.jupyter.kernel.messages.InspectReply;
 import org.eclipse.ease.jupyter.kernel.messages.InspectReply.Status;
@@ -48,22 +49,22 @@ public class InspectRequestMessageHandler implements IMessageHandler {
 		private final AbstractChannel fRequestChannel;
 
 		/**
-		 * {@link IScriptEngine} to be used for code analysis.
+		 * {@link IScriptEngineProvider} to dynamically get {@link IScriptEngine} to
+		 * execute code on.
 		 */
-		private final IScriptEngine fEngine;
+		private final IEngineProvider fEngineProvider;
 
 		/**
 		 * Constructor only stores parameters to members.
 		 * 
 		 * @param channel
-		 *            {@link AbstractChannel} the message handler is running
-		 *            for.
+		 *            {@link AbstractChannel} the message handler is running for.
 		 * @param engine
 		 *            {@link IScriptEngine} to be used for code analysis.
 		 */
-		public Factory(final AbstractChannel channel, IScriptEngine engine) {
+		public Factory(final AbstractChannel channel, IEngineProvider engineProvider) {
 			fRequestChannel = channel;
-			fEngine = engine;
+			fEngineProvider = engineProvider;
 		}
 
 		/**
@@ -71,7 +72,7 @@ public class InspectRequestMessageHandler implements IMessageHandler {
 		 */
 		@Override
 		public IMessageHandler create() {
-			return new InspectRequestMessageHandler(fRequestChannel, fEngine);
+			return new InspectRequestMessageHandler(fRequestChannel, fEngineProvider);
 		}
 
 	}
@@ -87,9 +88,10 @@ public class InspectRequestMessageHandler implements IMessageHandler {
 	private final AbstractChannel fReplyChannel;
 
 	/**
-	 * {@link IScriptEngine} to be used for code analysis.
+	 * {@link IScriptEngineProvider} to dynamically get {@link IScriptEngine} to
+	 * execute code on.
 	 */
-	private final IScriptEngine fEngine;
+	private final IEngineProvider fEngineProvider;
 
 	/**
 	 * Constructor only stores parameters to members.
@@ -99,14 +101,14 @@ public class InspectRequestMessageHandler implements IMessageHandler {
 	 * @param engine
 	 *            {@link IScriptEngine} to be used for code analysis.
 	 */
-	public InspectRequestMessageHandler(AbstractChannel replyChannel, IScriptEngine engine) {
+	public InspectRequestMessageHandler(AbstractChannel replyChannel, IEngineProvider engineProvider) {
 		fReplyChannel = replyChannel;
-		fEngine = engine;
+		fEngineProvider = engineProvider;
 	}
 
 	/**
-	 * Handles the message by using {@link CodeCompletionAggregator} to get
-	 * object information and returning the match.
+	 * Handles the message by using {@link CodeCompletionAggregator} to get object
+	 * information and returning the match.
 	 */
 	@Override
 	public void handle(Message message) {
@@ -122,47 +124,47 @@ public class InspectRequestMessageHandler implements IMessageHandler {
 
 		String code = request.getCode().substring(0, request.getCursorPos());
 
-		synchronized (ExecuteMessageHandler.getLock(fEngine)) {
-			// Already create default reply
-			Message reply = message.createReply();
-			reply.getHeader().withMsgType(REPLY_NAME);
+		final IScriptEngine engine = fEngineProvider.getEngine();
 
-			// Assume that everything worked correctly, otherwise update later
-			Map<String, Object> data = new HashMap<>();
-			Status status = Status.OK;
-			Map<String, Object> metadata = new HashMap<>();
-			Boolean found = false;
+		// Already create default reply
+		Message reply = message.createReply();
+		reply.getHeader().withMsgType(REPLY_NAME);
 
-			// Use completion aggregator and extensions
-			CodeCompletionAggregator completer = new CodeCompletionAggregator();
-			completer.setScriptEngine(fEngine);
+		// Assume that everything worked correctly, otherwise update later
+		Map<String, Object> data = new HashMap<>();
+		Status status = Status.OK;
+		Map<String, Object> metadata = new HashMap<>();
+		Boolean found = false;
 
-			List<ICompletionProposal> proposals = completer.getCompletionProposals(null, code, code.length(), 0, null);
-			for (ICompletionProposal proposal : proposals) {
-				if (proposal.getAdditionalProposalInfo() != null) {
-					found = true;
+		// Use completion aggregator and extensions
+		CodeCompletionAggregator completer = new CodeCompletionAggregator();
+		completer.setScriptEngine(engine);
 
-					if (proposal instanceof ScriptCompletionProposal) {
-						ScriptCompletionProposal scp = (ScriptCompletionProposal) proposal;
-						data.put("text/plain", scp.getHelpResolver().resolveHelp());
-						data.put("text/html", scp.getHelpResolver().resolveHTMLHelp());
-					} else {
-						data.put("text/plain", proposal.getAdditionalProposalInfo());
-					}
-					break;
+		List<ICompletionProposal> proposals = completer.getCompletionProposals(null, code, code.length(), 0, null);
+		for (ICompletionProposal proposal : proposals) {
+			if (proposal.getAdditionalProposalInfo() != null) {
+				found = true;
+
+				if (proposal instanceof ScriptCompletionProposal) {
+					ScriptCompletionProposal scp = (ScriptCompletionProposal) proposal;
+					data.put("text/plain", scp.getHelpResolver().resolveHelp());
+					data.put("text/html", scp.getHelpResolver().resolveHTMLHelp());
+				} else {
+					data.put("text/plain", proposal.getAdditionalProposalInfo());
 				}
+				break;
 			}
+		}
 
-			InspectReply content = new InspectReply().withStatus(status).withFound(found).withData(data)
-					.withMetadata(metadata);
-			reply = reply.withContent(content);
+		InspectReply content = new InspectReply().withStatus(status).withFound(found).withData(data)
+				.withMetadata(metadata);
+		reply = reply.withContent(content);
 
-			// Actually send the reply
-			try {
-				fReplyChannel.send(reply);
-			} catch (IOException e) {
-				// ignore
-			}
+		// Actually send the reply
+		try {
+			fReplyChannel.send(reply);
+		} catch (IOException e) {
+			// ignore
 		}
 	}
 }

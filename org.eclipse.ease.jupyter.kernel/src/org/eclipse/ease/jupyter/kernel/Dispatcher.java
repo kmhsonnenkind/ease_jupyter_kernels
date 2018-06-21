@@ -20,12 +20,13 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.ease.IScriptEngine;
+import org.eclipse.ease.service.EngineDescription;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,8 +38,8 @@ public class Dispatcher implements Runnable {
 	/**
 	 * Buffer size for incoming and outgoing data.
 	 * 
-	 * Connection file usually about 300 bytes so this buffer should be more
-	 * than large enough.
+	 * Connection file usually about 300 bytes so this buffer should be more than
+	 * large enough.
 	 */
 	private static final int BUFFER_SIZE = 8192;
 
@@ -63,25 +64,28 @@ public class Dispatcher implements Runnable {
 	private InetSocketAddress fAddress;
 
 	/**
-	 * {@link IScriptEngine} for code execution.
+	 * {@link EngineDescription} to dynamically create {@link IScriptEngine}.
 	 */
-	private IScriptEngine fEngine;
+	private EngineDescription fEngineDescription;
 
 	/**
 	 * Set of started kernels to be terminated on shutdown.
 	 */
-	private final Set<Kernel> fKernels = new HashSet<Kernel>();
+	private final Map<Config, Kernel> fKernels = new HashMap<>();
 
 	/**
 	 * Constructor only stores information about address to run the server on.
 	 * 
+	 * @param engineDescription
+	 *            {@link EngineDescription} to dynamically create
+	 *            {@link IScriptEngine}.
 	 * @param host
 	 *            Host to run the server on.
 	 * @param port
 	 *            Port to run the server on.
 	 */
-	public Dispatcher(IScriptEngine engine, String host, int port) {
-		fEngine = engine;
+	public Dispatcher(EngineDescription engineDescription, String host, int port) {
+		fEngineDescription = engineDescription;
 		fAddress = new InetSocketAddress(host, port);
 	}
 
@@ -113,8 +117,8 @@ public class Dispatcher implements Runnable {
 	 * Callback triggered when a connection is ready to be accepted.
 	 * 
 	 * @param key
-	 *            {@link SelectionKey} with information about the connection to
-	 *            be accepted.
+	 *            {@link SelectionKey} with information about the connection to be
+	 *            accepted.
 	 */
 	protected void accept(SelectionKey key) {
 		ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
@@ -151,8 +155,8 @@ public class Dispatcher implements Runnable {
 	 * Callback triggered when data is available from client.
 	 * 
 	 * @param selectionKey
-	 *            {@link SelectionKey} with information about the connection we
-	 *            can read from.
+	 *            {@link SelectionKey} with information about the connection we can
+	 *            read from.
 	 * @throws IOException
 	 *             If data could not be read.
 	 */
@@ -186,21 +190,22 @@ public class Dispatcher implements Runnable {
 			return;
 		}
 
-		// Actually build the kernel
-		Kernel kernel = new Kernel(config, fEngine);
+		synchronized (fKernels) {
+			if (!fKernels.containsKey(config)) {
+				// Actually build the kernel
+				Kernel kernel = new Kernel(config, fEngineDescription);
+				try {
+					kernel.start();
 
-		// Start the kernel
-		try {
-			kernel.start();
-
-			// Add kernel to internal list
-			synchronized (fKernels) {
-				fKernels.add(kernel);
+					// Add kernel to internal list
+					fKernels.put(config, kernel);
+				} catch (IOError e) {
+					e.printStackTrace();
+					// Close connection
+					closeConncection(selectionKey);
+				}
 			}
-		} catch (IOError e) {
-			e.printStackTrace();
-			// Close connection
-			closeConncection(selectionKey);
+
 		}
 	}
 
@@ -241,8 +246,8 @@ public class Dispatcher implements Runnable {
 	/**
 	 * Runs the server.
 	 * 
-	 * Waits for connection from kernel launchers, then reads connection file
-	 * and finally starts kernel based on received configuration.
+	 * Waits for connection from kernel launchers, then reads connection file and
+	 * finally starts kernel based on received configuration.
 	 */
 	public void run() {
 		// Set up the server
@@ -299,7 +304,7 @@ public class Dispatcher implements Runnable {
 
 		// Close all started kernels
 		synchronized (fKernels) {
-			for (Kernel kernel : fKernels) {
+			for (Kernel kernel : fKernels.values()) {
 				kernel.stop();
 			}
 		}

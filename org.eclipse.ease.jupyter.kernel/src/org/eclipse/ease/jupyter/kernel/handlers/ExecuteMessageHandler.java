@@ -15,11 +15,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.ScriptResult;
+import org.eclipse.ease.jupyter.kernel.IEngineProvider;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
 import org.eclipse.ease.jupyter.kernel.channels.ChannelPrintStream;
 import org.eclipse.ease.jupyter.kernel.channels.IOPubChannel;
@@ -63,25 +63,26 @@ public class ExecuteMessageHandler implements IMessageHandler {
 		private final IOPubChannel fIoPub;
 
 		/**
-		 * {@link IScriptEngine} to execute code on.
+		 * {@link IScriptEngineProvider} to dynamically get {@link IScriptEngine} to
+		 * execute code on.
 		 */
-		private final IScriptEngine fEngine;
+		private final IEngineProvider fEngineProvider;
 
 		/**
 		 * Constructor only stores parameters to members.
 		 * 
 		 * @param channel
-		 *            {@link AbstractChannel} the message handler is running
-		 *            for.
+		 *            {@link AbstractChannel} the message handler is running for.
 		 * @param ioPub
 		 *            {@link IOPubChannel} to send data to clients.
 		 * @param engine
+		 *            {@link IScriptEngineProvider} to dynamically get
 		 *            {@link IScriptEngine} to execute code on.
 		 */
-		public Factory(final AbstractChannel channel, IOPubChannel ioPub, IScriptEngine engine) {
+		public Factory(final AbstractChannel channel, IOPubChannel ioPub, IEngineProvider engineProvider) {
 			fRequestChannel = channel;
 			fIoPub = ioPub;
-			fEngine = engine;
+			fEngineProvider = engineProvider;
 		}
 
 		/**
@@ -89,7 +90,7 @@ public class ExecuteMessageHandler implements IMessageHandler {
 		 */
 		@Override
 		public IMessageHandler create() {
-			return new ExecuteMessageHandler(fRequestChannel, fIoPub, fEngine);
+			return new ExecuteMessageHandler(fRequestChannel, fIoPub, fEngineProvider);
 		}
 
 	}
@@ -110,9 +111,10 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	private final IOPubChannel fIoPub;
 
 	/**
-	 * {@link IScriptEngine} to execute code on.
+	 * {@link IScriptEngineProvider} to dynamically get {@link IScriptEngine} to
+	 * execute code on.
 	 */
-	private final IScriptEngine fEngine;
+	private final IEngineProvider fEngineProvider;
 
 	/**
 	 * Overall execution count set by constructor. Actual counter handled in
@@ -128,17 +130,18 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	 * @param ioPub
 	 *            {@link IOPubChannel} to send data to clients.
 	 * @param engine
+	 *            {@link IScriptEngineProvider} to dynamically get
 	 *            {@link IScriptEngine} to execute code on.
 	 */
-	public ExecuteMessageHandler(AbstractChannel replyChannel, IOPubChannel ioPub, IScriptEngine engine) {
+	public ExecuteMessageHandler(AbstractChannel replyChannel, IOPubChannel ioPub, IEngineProvider engineProvider) {
 		fReplyChannel = replyChannel;
 		fIoPub = ioPub;
-		fEngine = engine;
+		fEngineProvider = engineProvider;
 	}
 
 	/**
-	 * Broadcasts the code input to let other clients know what is currently
-	 * being executed.
+	 * Broadcasts the code input to let other clients know what is currently being
+	 * executed.
 	 * 
 	 * @param code
 	 *            Code being executed.
@@ -258,31 +261,6 @@ public class ExecuteMessageHandler implements IMessageHandler {
 	}
 
 	/**
-	 * Mappings from {@link IScriptEngine} to corresponding lock.
-	 * <p>
-	 * We cannot directly lock on {@link IScriptEngine} because code execution
-	 * is happening in another thread. Therefore we need placeholder objects.
-	 */
-	private static final Map<IScriptEngine, Object> LOCKS = new HashMap<IScriptEngine, Object>();
-
-	/**
-	 * Gets a simple lock object for given {@link IScriptEngine}.
-	 * <p>
-	 * As we cannot lock on {@link IScriptEngine} directly we need placeholder
-	 * objects.
-	 * 
-	 * @param engine
-	 *            {@link IScriptEngine} to get lock for.
-	 * @return Lock object for given {@link IScriptEngine}.
-	 */
-	public static synchronized Object getLock(IScriptEngine engine) {
-		if (!LOCKS.containsKey(engine)) {
-			LOCKS.put(engine, new Object());
-		}
-		return LOCKS.get(engine);
-	}
-
-	/**
 	 * Handles the message by executing the code and sending the result back.
 	 */
 	@Override
@@ -298,77 +276,77 @@ public class ExecuteMessageHandler implements IMessageHandler {
 		}
 		String code = request.getCode();
 
-		synchronized (getLock(fEngine)) {
-			// Set message header for print streams
-			ChannelPrintStream stdout = (ChannelPrintStream) fEngine.getOutputStream();
-			stdout.setParentHeader(message.getHeader());
-			ChannelPrintStream stderr = (ChannelPrintStream) fEngine.getErrorStream();
-			stderr.setParentHeader(message.getHeader());
+		final IScriptEngine engine = fEngineProvider.getEngine();
 
-			// Broadcast the execution state to be busy
-			broadcastStart(message.getHeader());
+		// Set message header for print streams
+		ChannelPrintStream stdout = (ChannelPrintStream) engine.getOutputStream();
+		stdout.setParentHeader(message.getHeader());
+		ChannelPrintStream stderr = (ChannelPrintStream) engine.getErrorStream();
+		stderr.setParentHeader(message.getHeader());
 
-			// Broadcast code request to let other clients know what is
-			// happening
-			if (!request.getSilent()) {
-				broadcastInput(code, message.getHeader());
-			}
+		// Broadcast the execution state to be busy
+		broadcastStart(message.getHeader());
 
-			// Already create default reply
-			Message reply = message.createReply();
-			reply.getHeader().withMsgType(REPLY_NAME);
+		// Broadcast code request to let other clients know what is
+		// happening
+		if (!request.getSilent()) {
+			broadcastInput(code, message.getHeader());
+		}
 
-			// Assume that everything worked correctly, otherwise update later
-			ExecuteReply content = new ExecuteReply().withExecutionCount(fExecutionCount).withStatus(Status.OK);
-			ScriptResult result = null;
-			try {
-				// Synchronously execute code using IScriptEngine
-				result = fEngine.executeSync(code);
+		// Already create default reply
+		Message reply = message.createReply();
+		reply.getHeader().withMsgType(REPLY_NAME);
 
-				// Flush output stream just to be sure
-				stdout.flush();
-				stderr.flush();
+		// Assume that everything worked correctly, otherwise update later
+		ExecuteReply content = new ExecuteReply().withExecutionCount(fExecutionCount).withStatus(Status.OK);
+		ScriptResult result = null;
+		try {
+			// Synchronously execute code using IScriptEngine
+			result = engine.executeSync(code);
 
-				// Also reset the header field just to be sure
-				stdout.setParentHeader(null);
-				stderr.setParentHeader(null);
+			// Flush output stream just to be sure
+			stdout.flush();
+			stderr.flush();
 
-				// Check if exception occurred
-				Throwable exception = result.getException();
-				if (exception != null) {
-					// Patch stacktrace to suitable format
-					List<String> stackTrace = new ArrayList<String>();
-					for (StackTraceElement ste : exception.getStackTrace()) {
-						stackTrace.add(ste.toString());
-					}
+			// Also reset the header field just to be sure
+			stdout.setParentHeader(null);
+			stderr.setParentHeader(null);
 
-					// Actual set exception
-					content = content.withStatus(Status.ERROR).withEname(exception.getClass().getName())
-							.withEvalue(exception.getMessage()).withTraceback(stackTrace);
+			// Check if exception occurred
+			Throwable exception = result.getException();
+			if (exception != null) {
+				// Patch stacktrace to suitable format
+				List<String> stackTrace = new ArrayList<String>();
+				for (StackTraceElement ste : exception.getStackTrace()) {
+					stackTrace.add(ste.toString());
 				}
-			} catch (InterruptedException e) {
-				// Set status to aborted
-				content = content.withStatus(Status.ABORT);
+
+				// Actual set exception
+				content = content.withStatus(Status.ERROR).withEname(exception.getClass().getName())
+						.withEvalue(exception.getMessage()).withTraceback(stackTrace);
 			}
-			reply = reply.withContent(content);
+		} catch (InterruptedException e) {
+			// Set status to aborted
+			content = content.withStatus(Status.ABORT);
+		}
+		reply = reply.withContent(content);
 
-			// Broadcast result
-			if (!request.getSilent()) {
-				broadcastResult(result, message.getHeader());
-			}
+		// Broadcast result
+		if (!request.getSilent()) {
+			broadcastResult(result, message.getHeader());
+		}
 
-			// Broadcast the execution state to be idle again
-			broadcastStop(message.getHeader());
+		// Broadcast the execution state to be idle again
+		broadcastStop(message.getHeader());
 
-			// (Potentially) Store history
-			storeHistory(request, result, message.getHeader().getSession());
+		// (Potentially) Store history
+		storeHistory(request, result, message.getHeader().getSession());
 
-			// Actually send the reply
-			try {
-				fReplyChannel.send(reply);
-			} catch (IOException e) {
-				// ignore
-			}
+		// Actually send the reply
+		try {
+			fReplyChannel.send(reply);
+		} catch (IOException e) {
+			// ignore
 		}
 	}
 }

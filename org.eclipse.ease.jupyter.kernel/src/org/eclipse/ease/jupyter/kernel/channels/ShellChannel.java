@@ -14,7 +14,6 @@ package org.eclipse.ease.jupyter.kernel.channels;
 import java.io.IOException;
 
 import org.zeromq.ZMQ;
-import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Kernel;
 import org.eclipse.ease.jupyter.kernel.Session;
 import org.eclipse.ease.jupyter.kernel.handlers.AbstractMessageHandlerFactory;
@@ -75,17 +74,14 @@ public class ShellChannel extends AbstractRunningServerChannel {
 	 * @param kernel
 	 *            {@link Kernel} object necessary for callbacks.
 	 * @param ioPub
-	 *            {@link IOPubChannel} for informing clients about results,
-	 *            output, etc.
-	 * @param stdin
-	 *            {@link StdinChannel} for querying data from user.
+	 *            {@link IOPubChannel} for informing clients about results, output,
+	 *            etc.
 	 */
-	public ShellChannel(final String address, final Session session, Kernel kernel, IOPubChannel ioPub,
-			IScriptEngine engine) {
+	public ShellChannel(final String address, final Session session, Kernel kernel, IOPubChannel ioPub) {
 		super(address, session);
 
 		// Create message handler factory.
-		fMessageHandlerFactory = new AbstractMessageHandlerFactory(kernel, this, ioPub, engine);
+		fMessageHandlerFactory = new AbstractMessageHandlerFactory(kernel, this, ioPub);
 	}
 
 	/**
@@ -120,8 +116,8 @@ public class ShellChannel extends AbstractRunningServerChannel {
 	}
 
 	/**
-	 * Handles the given method by trying to create a new
-	 * {@link IMessageHandler} based on type and executing it.
+	 * Handles the given method by trying to create a new {@link IMessageHandler}
+	 * based on type and executing it.
 	 * 
 	 * @param message
 	 *            {@link Message} to be handled.

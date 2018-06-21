@@ -19,6 +19,8 @@ import org.eclipse.ease.jupyter.kernel.channels.HeartbeatChannel;
 import org.eclipse.ease.jupyter.kernel.channels.IOPubChannel;
 import org.eclipse.ease.jupyter.kernel.channels.ShellChannel;
 import org.eclipse.ease.jupyter.kernel.channels.StdinChannel;
+import org.eclipse.ease.service.EngineDescription;
+import org.eclipse.ease.IReplEngine;
 import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Protocol;
 import org.eclipse.ease.jupyter.kernel.Session;
@@ -26,11 +28,16 @@ import org.eclipse.ease.jupyter.kernel.Session;
 /**
  * Jupyter kernel for EASE script engines.
  */
-public class Kernel {
+public class Kernel implements IEngineProvider {
+	/**
+	 * {@link EngineDescription} to dynamically create {@link IScriptEngine}.
+	 */
+	private final EngineDescription fEngineDescription;
+
 	/**
 	 * {@link IScriptEngine} to execute code on.
 	 */
-	public final IScriptEngine fEngine;
+	protected IScriptEngine fEngine;
 
 	/**
 	 * Session used by kernel.
@@ -50,8 +57,8 @@ public class Kernel {
 	protected final ShellChannel fShell;
 
 	/**
-	 * Control channel used for incoming requests (same as {@link #fShell} but
-	 * for requests with higher priority.
+	 * Control channel used for incoming requests (same as {@link #fShell} but for
+	 * requests with higher priority.
 	 */
 	protected final ShellChannel fControl;
 
@@ -71,12 +78,12 @@ public class Kernel {
 	 * @param config
 	 *            Config with information about ports to be used, signature
 	 *            algorithm, ...
-	 * @param engine
-	 *            {@link IScriptEngine} to be used by kernel for execution.
+	 * @param engineDescription
+	 *            {@link EngineDescription} to dynamically create
+	 *            {@link IScriptEngine}.
 	 */
-	public Kernel(final Config config, IScriptEngine engine) {
-		fEngine = engine;
-		fEngine.setTerminateOnIdle(false);
+	public Kernel(final Config config, EngineDescription engineDescription) {
+		fEngineDescription = engineDescription;
 
 		// Create session
 		final Protocol protocol = new Protocol(config.getKey(), config.getSignatureScheme());
@@ -85,14 +92,14 @@ public class Kernel {
 		// Create channels
 		fHeartBeat = new HeartbeatChannel(getChannelAddress(config.getHbPort(), config), fSession);
 		fIoPub = new IOPubChannel(getChannelAddress(config.getIopubPort(), config), fSession);
-		fStdin = new StdinChannel(getChannelAddress(config.getStdinPort(), config), fSession);
-		fShell = new ShellChannel(getChannelAddress(config.getShellPort(), config), fSession, this, fIoPub, engine);
-		fControl = new ShellChannel(getChannelAddress(config.getControlPort(), config), fSession, this, fIoPub, engine);
 
-		// Patch streams for script engine
-		engine.setOutputStream(new ChannelPrintStream(new ChannelOutputStream("stdout", fIoPub)));
-		engine.setErrorStream(new ChannelPrintStream(new ChannelOutputStream("stderr", fIoPub)));
-		// TODO: patch input stream
+		// Setup engine here once minimal setup is available
+		setupEngine();
+
+		// Create rest of the channels that rely on script engine
+		fStdin = new StdinChannel(getChannelAddress(config.getStdinPort(), config), fSession);
+		fShell = new ShellChannel(getChannelAddress(config.getShellPort(), config), fSession, this, fIoPub);
+		fControl = new ShellChannel(getChannelAddress(config.getControlPort(), config), fSession, this, fIoPub);
 	}
 
 	/**
@@ -107,6 +114,40 @@ public class Kernel {
 	 */
 	private static String getChannelAddress(final Integer channelPort, Config config) {
 		return String.format("%s://%s:%d", config.getTransport(), config.getIp(), channelPort);
+	}
+
+	@Override
+	public IScriptEngine getEngine() {
+		return fEngine;
+	}
+
+	@Override
+	public void resetEngine() {
+		setupEngine();
+	}
+
+	/**
+	 * Sets internal {@link IScriptEngine} based on given
+	 * {@link #fEngineDescription}.
+	 */
+	private void setupEngine() {
+		// Create and setup new script engine
+		IScriptEngine engine = fEngineDescription.createEngine();
+		if (engine instanceof IReplEngine) {
+			((IReplEngine) engine).setTerminateOnIdle(false);
+		}
+		engine.setOutputStream(new ChannelPrintStream(new ChannelOutputStream("stdout", fIoPub)));
+		engine.setErrorStream(new ChannelPrintStream(new ChannelOutputStream("stderr", fIoPub)));
+
+		// Shut down old engine
+		if (fEngine != null) {
+			fEngine.getOutputStream().close();
+			fEngine.getErrorStream().close();
+			fEngine.terminate();
+		}
+
+		// Actually update engine
+		fEngine = engine;
 	}
 
 	/**

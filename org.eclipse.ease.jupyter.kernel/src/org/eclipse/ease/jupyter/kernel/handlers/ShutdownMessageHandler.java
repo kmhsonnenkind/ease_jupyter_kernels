@@ -15,9 +15,13 @@ import java.io.IOException;
 
 import org.eclipse.ease.jupyter.kernel.Kernel;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
+import org.eclipse.ease.jupyter.kernel.messages.InspectRequest;
 import org.eclipse.ease.jupyter.kernel.messages.KernelInfoReply;
 import org.eclipse.ease.jupyter.kernel.messages.Message;
 import org.eclipse.ease.jupyter.kernel.messages.ShutdownReply;
+import org.eclipse.ease.jupyter.kernel.messages.ShutdownRequest;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Custom message handler for handling kernel shutdown messages.
@@ -29,8 +33,8 @@ public class ShutdownMessageHandler implements IMessageHandler {
 	public static final String REQUEST_NAME = "shutdown_request";
 
 	/**
-	 * {@link IMessageHandlerFactory} for creating
-	 * {@link ShutdownMessageHandler} objects.
+	 * {@link IMessageHandlerFactory} for creating {@link ShutdownMessageHandler}
+	 * objects.
 	 *
 	 */
 	public static class Factory implements IMessageHandlerFactory {
@@ -48,8 +52,7 @@ public class ShutdownMessageHandler implements IMessageHandler {
 		 * Constructor only stores parameters to members.
 		 * 
 		 * @param channel
-		 *            {@link AbstractChannel} the message handler is running
-		 *            for.
+		 *            {@link AbstractChannel} the message handler is running for.
 		 * @param kernel
 		 *            {@link Kernel} object to query information from.
 		 */
@@ -67,6 +70,11 @@ public class ShutdownMessageHandler implements IMessageHandler {
 		}
 
 	}
+
+	/**
+	 * {@link ObjectMapper} to create {@link InspectRequest} from dictionary.
+	 */
+	private static final ObjectMapper JSON_OBJECT_MAPPER = new ObjectMapper();
 
 	/**
 	 * Abstract channel for sending replies.
@@ -97,15 +105,27 @@ public class ShutdownMessageHandler implements IMessageHandler {
 	 */
 	@Override
 	public void handle(Message message) {
-		// TODO: handle restarts
+		final ShutdownRequest request;
+		try {
+			request = JSON_OBJECT_MAPPER.convertValue(message.getContent(), ShutdownRequest.class);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		if (request.getRestart()) {
+			fKernel.resetEngine();
+		}
+
 		Message reply = message.createReply();
-		ShutdownReply content = new ShutdownReply().withRestart(false);
+		ShutdownReply content = new ShutdownReply().withRestart(request.getRestart());
 		reply = reply.withContent(content);
 
 		try {
 			fReplyChannel.send(reply);
-			fKernel.stop();
-
+			if (!request.getRestart()) {
+				fKernel.stop();
+			}
 		} catch (IOException e) {
 			// ignore
 		}

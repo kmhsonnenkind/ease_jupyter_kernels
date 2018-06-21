@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.ease.IScriptEngine;
+import org.eclipse.ease.jupyter.kernel.IEngineProvider;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractChannel;
 import org.eclipse.ease.jupyter.kernel.messages.CompleteReply;
 import org.eclipse.ease.jupyter.kernel.messages.CompleteRequest;
@@ -51,22 +52,22 @@ public class CompleteRequestMessageHandler implements IMessageHandler {
 		private final AbstractChannel fRequestChannel;
 
 		/**
-		 * {@link IScriptEngine} to be used for code completion.
+		 * {@link IScriptEngineProvider} to dynamically get {@link IScriptEngine} to
+		 * execute code on.
 		 */
-		private final IScriptEngine fEngine;
+		private final IEngineProvider fEngineProvider;
 
 		/**
 		 * Constructor only stores parameters to members.
 		 * 
 		 * @param channel
-		 *            {@link AbstractChannel} the message handler is running
-		 *            for.
+		 *            {@link AbstractChannel} the message handler is running for.
 		 * @param engine
 		 *            {@link IScriptEngine} to be used for code completion.
 		 */
-		public Factory(final AbstractChannel channel, IScriptEngine engine) {
+		public Factory(final AbstractChannel channel, IEngineProvider engineProvider) {
 			fRequestChannel = channel;
-			fEngine = engine;
+			fEngineProvider = engineProvider;
 		}
 
 		/**
@@ -74,7 +75,7 @@ public class CompleteRequestMessageHandler implements IMessageHandler {
 		 */
 		@Override
 		public IMessageHandler create() {
-			return new CompleteRequestMessageHandler(fRequestChannel, fEngine);
+			return new CompleteRequestMessageHandler(fRequestChannel, fEngineProvider);
 		}
 
 	}
@@ -90,9 +91,10 @@ public class CompleteRequestMessageHandler implements IMessageHandler {
 	private final AbstractChannel fReplyChannel;
 
 	/**
-	 * {@link IScriptEngine} to be used for code completion.
+	 * {@link IScriptEngineProvider} to dynamically get {@link IScriptEngine} to
+	 * execute code on.
 	 */
-	private final IScriptEngine fEngine;
+	private final IEngineProvider fEngineProvider;
 
 	/**
 	 * Constructor only stores parameters to members.
@@ -102,9 +104,9 @@ public class CompleteRequestMessageHandler implements IMessageHandler {
 	 * @param engine
 	 *            {@link IScriptEngine} to be used for code completion.
 	 */
-	public CompleteRequestMessageHandler(AbstractChannel replyChannel, IScriptEngine engine) {
+	public CompleteRequestMessageHandler(AbstractChannel replyChannel, IEngineProvider engineProvider) {
 		fReplyChannel = replyChannel;
-		fEngine = engine;
+		fEngineProvider = engineProvider;
 	}
 
 	/**
@@ -125,61 +127,61 @@ public class CompleteRequestMessageHandler implements IMessageHandler {
 
 		String code = request.getCode().substring(0, request.getCursorPos());
 
-		synchronized (ExecuteMessageHandler.getLock(fEngine)) {
-			// Already create default reply
-			Message reply = message.createReply();
-			reply.getHeader().withMsgType(REPLY_NAME);
+		final IScriptEngine engine = fEngineProvider.getEngine();
 
-			// Assume that everything worked correctly, otherwise update later
-			Set<String> matches = new HashSet<>();
-			Integer cursorStart = code.length();
-			Integer cursorEnd = code.length();
-			Map<String, Object> metadata = new HashMap<>();
-			Status status = Status.OK;
+		// Already create default reply
+		Message reply = message.createReply();
+		reply.getHeader().withMsgType(REPLY_NAME);
 
-			// Use completion aggregator and extensions
-			CodeCompletionAggregator completer = new CodeCompletionAggregator();
-			completer.setScriptEngine(fEngine);
+		// Assume that everything worked correctly, otherwise update later
+		Set<String> matches = new HashSet<>();
+		Integer cursorStart = code.length();
+		Integer cursorEnd = code.length();
+		Map<String, Object> metadata = new HashMap<>();
+		Status status = Status.OK;
 
-			// Convert to more usable format
-			List<ICompletionProposal> proposals = completer.getCompletionProposals(null, code, code.length(), 0, null);
-			for (ICompletionProposal proposal : proposals) {
+		// Use completion aggregator and extensions
+		CodeCompletionAggregator completer = new CodeCompletionAggregator();
+		completer.setScriptEngine(engine);
 
-				// ScriptCompletionProposals can be handled more elegantly
-				if (proposal instanceof ScriptCompletionProposal) {
-					ScriptCompletionProposal scp = (ScriptCompletionProposal) proposal;
-					matches.add(scp.getReplacementString());
-					cursorStart = scp.getCursorStartPosition();
-				} else {
-					String completion = proposal.getDisplayString();
-					matches.add(completion);
+		// Convert to more usable format
+		List<ICompletionProposal> proposals = completer.getCompletionProposals(null, code, code.length(), 0, null);
+		for (ICompletionProposal proposal : proposals) {
 
-					// Update cursor start position
-					cursorStart = code.length();
-					for (int i = 1; i < completion.length(); i++) {
-						if (code.endsWith(completion.substring(0, i))) {
-							cursorStart = cursorStart - i;
-							break;
-						}
+			// ScriptCompletionProposals can be handled more elegantly
+			if (proposal instanceof ScriptCompletionProposal) {
+				ScriptCompletionProposal scp = (ScriptCompletionProposal) proposal;
+				matches.add(scp.getReplacementString());
+				cursorStart = scp.getCursorStartPosition();
+			} else {
+				String completion = proposal.getDisplayString();
+				matches.add(completion);
+
+				// Update cursor start position
+				cursorStart = code.length();
+				for (int i = 1; i < completion.length(); i++) {
+					if (code.endsWith(completion.substring(0, i))) {
+						cursorStart = cursorStart - i;
+						break;
 					}
 				}
 			}
+		}
 
-			// Use list instead of set for matches
-			List<String> matchList = new ArrayList<>();
-			matchList.addAll(matches);
+		// Use list instead of set for matches
+		List<String> matchList = new ArrayList<>();
+		matchList.addAll(matches);
 
-			// Create reply content
-			CompleteReply content = new CompleteReply().withMatches(matchList).withCursorStart(cursorStart)
-					.withCursorEnd(cursorEnd).withMetadata(metadata).withStatus(status);
-			reply = reply.withContent(content);
+		// Create reply content
+		CompleteReply content = new CompleteReply().withMatches(matchList).withCursorStart(cursorStart)
+				.withCursorEnd(cursorEnd).withMetadata(metadata).withStatus(status);
+		reply = reply.withContent(content);
 
-			// Actually send the reply
-			try {
-				fReplyChannel.send(reply);
-			} catch (IOException e) {
-				// ignore
-			}
+		// Actually send the reply
+		try {
+			fReplyChannel.send(reply);
+		} catch (IOException e) {
+			// ignore
 		}
 	}
 }

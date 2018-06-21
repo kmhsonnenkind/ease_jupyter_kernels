@@ -55,7 +55,7 @@ public class KernelModule extends AbstractScriptModule {
 		}
 
 		// Start the dispatcher
-		final Dispatcher dispatcher = new Dispatcher(engine, host, port);
+		final Dispatcher dispatcher = new Dispatcher(engine.getDescription(), host, port);
 		final Thread thread = new Thread(dispatcher);
 		thread.start();
 

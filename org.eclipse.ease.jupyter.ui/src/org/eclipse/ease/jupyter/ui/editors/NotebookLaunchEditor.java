@@ -154,6 +154,9 @@ public class NotebookLaunchEditor extends EditorPart {
 					"File '" + fNotebookFile.getLocation().toString() + "' does not exist."));
 		}
 
+		// Set tab information
+		setPartName(fNotebookFile.getName());
+
 		// Asynchronously start up Jupyter
 		Job jupyterStartJob = new Job("Starting Jupyter...") {
 
@@ -593,7 +596,8 @@ public class NotebookLaunchEditor extends EditorPart {
 
 		// Create process
 		// XXX: Use hardcoded string to avoid dependency to py4j plugin
-		String interpreter = Platform.getPreferencesService().getString("org.eclipse.ease.lang.python.py4j", "org.eclipse.ease.lang.python.py4j.INTERPRETER", "python", null);
+		String interpreter = Platform.getPreferencesService().getString("org.eclipse.ease.lang.python.py4j",
+				"org.eclipse.ease.lang.python.py4j.INTERPRETER", "python", null);
 		final IStringVariableManager variableManager = VariablesPlugin.getDefault().getStringVariableManager();
 		try {
 			interpreter = variableManager.performStringSubstitution(interpreter);
@@ -602,8 +606,8 @@ public class NotebookLaunchEditor extends EditorPart {
 		}
 
 		String workspaceDir = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-		ProcessBuilder processBuilder = new ProcessBuilder(interpreter, "-m", "notebook", "--no-browser", "--port=" + fJupyterPort,
-				"--notebook-dir=" + workspaceDir);
+		ProcessBuilder processBuilder = new ProcessBuilder(interpreter, "-m", "notebook", "--no-browser",
+				"--port=" + fJupyterPort, "--notebook-dir=" + workspaceDir);
 		processBuilder.directory(new File(workspaceDir));
 
 		// Patch environment variables for Jupyter to find kernels
@@ -631,11 +635,8 @@ public class NotebookLaunchEditor extends EditorPart {
 	 *            {@link IScriptEngine} for the {@link Dispatcher}.
 	 */
 	private void startDispatcherThread(EngineDescription engineDescription) {
-		// Create script engine for dispatcher
-		IScriptEngine engine = engineDescription.createEngine();
-
 		// Create actual dispatcher object
-		fDispatcher = new Dispatcher(engine, "localhost", fDispatcherPort);
+		fDispatcher = new Dispatcher(engineDescription, "localhost", fDispatcherPort);
 
 		// Start thread for dispatcher
 		fDispatcherThread = new Thread(fDispatcher);

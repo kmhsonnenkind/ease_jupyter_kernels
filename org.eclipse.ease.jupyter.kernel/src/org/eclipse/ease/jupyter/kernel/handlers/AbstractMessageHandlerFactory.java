@@ -14,11 +14,9 @@ package org.eclipse.ease.jupyter.kernel.handlers;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.ease.IScriptEngine;
 import org.eclipse.ease.jupyter.kernel.Kernel;
 import org.eclipse.ease.jupyter.kernel.channels.AbstractServerChannel;
 import org.eclipse.ease.jupyter.kernel.channels.IOPubChannel;
-import org.eclipse.ease.jupyter.kernel.channels.StdinChannel;
 
 /**
  * Abstract Factory for creating {@link IMessageHandlerFactory} objects.
@@ -31,8 +29,8 @@ import org.eclipse.ease.jupyter.kernel.channels.StdinChannel;
  */
 public class AbstractMessageHandlerFactory {
 	/**
-	 * Lookup table from message type to {@link IMessageHandlerFactory} to
-	 * create new {@link IMessageHandler} objects.
+	 * Lookup table from message type to {@link IMessageHandlerFactory} to create
+	 * new {@link IMessageHandler} objects.
 	 */
 	private final Map<String, IMessageHandlerFactory> fFactoryMethods = new HashMap<String, IMessageHandlerFactory>();
 
@@ -40,30 +38,27 @@ public class AbstractMessageHandlerFactory {
 	 * Constructor initializes members and populates message handler array.
 	 * 
 	 * @param kernel
-	 *            {@link Kernel} necessary because handlers might need to
-	 *            perform callbacks.
+	 *            {@link Kernel} necessary because handlers might need to perform
+	 *            callbacks.
 	 * @param channel
 	 *            {@link AbstractServerChannel} to be able to send back data.
 	 * @param ioPub
 	 *            {@link IOPubChannel} for publishing data.
-	 * @param stdin
-	 *            {@link StdinChannel} for querying data from user.
 	 */
-	public AbstractMessageHandlerFactory(Kernel kernel, AbstractServerChannel channel, IOPubChannel ioPub,
-			IScriptEngine engine) {
+	public AbstractMessageHandlerFactory(Kernel kernel, AbstractServerChannel channel, IOPubChannel ioPub) {
 		// Add all message handler factories
 		fFactoryMethods.put(KernelInfoMessageHandler.REQUEST_NAME,
 				new KernelInfoMessageHandler.Factory(channel, kernel));
 		fFactoryMethods.put(ExecuteMessageHandler.REQUEST_NAME,
-				new ExecuteMessageHandler.Factory(channel, ioPub, engine));
+				new ExecuteMessageHandler.Factory(channel, ioPub, kernel));
 		fFactoryMethods.put(IsCompleteMessageHandler.REQUEST_NAME, new IsCompleteMessageHandler.Factory(channel));
 		fFactoryMethods.put(HistoryMessageHandler.REQUEST_NAME, new HistoryMessageHandler.Factory(channel));
-		fFactoryMethods.put(CompleteRequestMessageHandler.REQUEST_NAME, new CompleteRequestMessageHandler.Factory(channel, engine));
-		fFactoryMethods.put(InspectRequestMessageHandler.REQUEST_NAME, new InspectRequestMessageHandler.Factory(channel, engine));
+		fFactoryMethods.put(CompleteRequestMessageHandler.REQUEST_NAME,
+				new CompleteRequestMessageHandler.Factory(channel, kernel));
+		fFactoryMethods.put(InspectRequestMessageHandler.REQUEST_NAME,
+				new InspectRequestMessageHandler.Factory(channel, kernel));
 
-		// TODO: find race condition in shutdown request
-		// fFactoryMethods.put(ShutdownMessageHandler.REQUEST_NAME, new
-		// ShutdownMessageHandler.Factory(channel, kernel));
+		fFactoryMethods.put(ShutdownMessageHandler.REQUEST_NAME, new ShutdownMessageHandler.Factory(channel, kernel));
 	}
 
 	/**
